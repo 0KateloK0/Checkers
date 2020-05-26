@@ -1,0 +1,21 @@
+.field {
+	display: grid;
+	grid-template-columns: repeat(8, 50px);
+	grid-template-rows: repeat(8, 50px);
+}
+
+.checker-field {
+
+}
+
+.checker-field-white {
+	background: #FFFF66;
+}
+
+.checker-field-black {
+	background: #CC6600;
+}
+
+.checker-img {
+	width: 50px;
+}
