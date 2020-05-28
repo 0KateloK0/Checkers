@@ -6,9 +6,10 @@ function CheckerImg ({color, queen}) {
 }
 
 function CheckerField (props) {
-	let checker;
+	let checker = props.checker ? <CheckerImg color={props.checker.color} queen={props.checker.queen} /> : undefined;
+	/*let checker;
 	if (props.checker)
-		checker = <CheckerImg color={props.checker.color} queen={props.checker.queen} />;
+		checker = <CheckerImg color={props.checker.color} queen={props.checker.queen} />;*/
 	return (
 		<div className={'checker-field checker-field-' + props.bg} onClick={props.onClick} pos={props.pos}>
 			{checker}
