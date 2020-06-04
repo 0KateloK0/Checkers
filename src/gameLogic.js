@@ -1,24 +1,13 @@
-// there must be commands: undo, turn, surrender. when server will be ready, server logic will be 'editor' thing and
-// player sreen will be API thing. player will send his selected checker position and new place to this checker to stand on
-// then game logic will refactor this commands and game state will change. Only problem is that server must not response
-// on what player checked. Client must reject thing, so it's not so isolated game logic from players view...
-
-// issue: checking turn for possibility is happening in game logic, so maybe i should move whole logic to this place
-// even that player can choose wrong checker. And what about multy-turns???
-
-// at the moment: game is 'editor'. this object has some methods like makeTurn, init, etc. This object is reponsible for game logic
-// interaction with client is going by commands pattern. the only thing commands does to client is setting its state
-// issues: uncompleted checkTurn system, unrealised continuing eating
-
-
-
 let game = new (function () { // operator new here just to initialize 'this'
 	class Checker {
 		constructor (color, row, col) {
 			this.color = color;
 			this.queen = false; // when it initializes it's always not queen
+			this.changeCoords(row, col);
+		}
+		changeCoords(row, col) {
 			this.row = row;
-			this.col = col
+			this.col = col;
 		}
 	}
 
@@ -60,10 +49,6 @@ let game = new (function () { // operator new here just to initialize 'this'
 		flush () {
 			this.splice(0, this.length);
 		}
-		/*,
-		copy () {
-
-		}*/
 	});
 
 	this.init = function () {
@@ -92,24 +77,28 @@ let game = new (function () { // operator new here just to initialize 'this'
 
 	this.replaceChecker = function (r, c, row, col) {
 		this.field[row][col] = this.field[r][c];
+		this.field[row][col].changeCoords(row, col);
 		this.field[r][c] = 0;
 	}
-	this.deleteChecker = function (i, j) {
-		this.field[i][j] = 0;
+	this.deleteChecker = function (row, col) {
+		this.field[row][col] = 0;
 	}
 	this.checkCheckerTurn = function (checker, row, col) {
 		let {row: r, col: c, queen, color} = {...checker};
 		// checks that turn is possible (false - 0) and if so (1) and there is ONE enemy on way return 2 (eating turn)
 		// this thing assumes that there are no other eating turn
-		let check = Math.sign(row - r) === Math.sign(col - c);
-		if (check) { // checks if on same diag
-			let d = this.field.getDiagonal(r, c, check),
+		if (Math.abs(row - r) === Math.abs(col - c)) { // checks if on same diag
+			let d = this.field.getDiagonal(r, c, Math.sign(row - r) === Math.sign(col - c)),
 				index = row - r; // it's not important if this is row or col comparsion
 			if (d[index]) return 0; // checks if there is no other checker on new place
 			if (!queen) {
 				switch (Math.abs(index)) {
-					case 1: return 1;
-					case 2: return d[index - 1] && (d[index - 1].color !== color) ? 2 : 0;
+					case 1:
+						if (((Math.sign(index) > 0) && (color === 'black')) ||
+							((Math.sign(index) < 0) && (color === 'white')))
+							return 1;
+						else return 0;
+					case 2: return d[index - Math.sign(index)] && (d[index - Math.sign(index)].color !== color) ? 2 : 0;
 					default: return 0;
 				}
 			}
@@ -127,62 +116,82 @@ let game = new (function () { // operator new here just to initialize 'this'
 		else return 0;
 	}
 
-	this.checkTurn = function ({checker, row, col}) {
+	this.checkEatingTurns = function (checker) {
+		let {row, col} = checker;
+		for (let i = row - 1; i >= 0; i--) {
+			for (let j = col - 1; j >= 0; j--)
+				if (this.checkCheckerTurn(checker, i, j) === 2) return true;
+			for (let j = col + 1; j < 8; j++)
+				if (this.checkCheckerTurn(checker, i, j) === 2) return true;
+		}
+		for (let i = row + 1; i < 8; i++) {
+			for (let j = col - 1; j >= 0; j--)
+				if (this.checkCheckerTurn(checker, i, j) === 2) return true;
+			for (let j = col + 1; j < 8; j++)
+				if (this.checkCheckerTurn(checker, i, j) === 2) return true;
+		}
+		return false;
+	}
+
+	this.checkTurn = function (checker, row, col) {
 		// there is no need to check wheter checker is right color or not. game does not know which client matches which color
 		let field = this.field;
 		switch (this.checkCheckerTurn(checker, row, col)) {
 			case 0: return 0;
-			case 2:
-				// check if there next turn is possible. if so return 3 if not return 2
-				let {row: r, col: c} = {...checker};
-
-				function check (d) {
-					for (let {row: y, col: x} of d) {
-						if ((field[y][x] != checker) && (this.checkCheckerTurn(checker, y, x) == 2))
-							return true;
-					}
-					return false;
-				}
-
-				return check(field.getDiagonal(r, c, true)) || check(field.getDiagonal(r, c, false)) ? 3 : 2;
+			case 2: return 2;
 			case 1:
 				// check for any eating turns possible. if so return 0 if not return 1
 				// also add trigger: if previous turn had done, this check is unnecessary
 				// possible optimisation: look only for diagonals 
-				for (let i = 0; i < 8; i++) {
-					for (let j = 0; j < 8; j++) {
-						if ((field[i][j] != checker) && (field[i][j].color == checker.color)) {
-							let self = this;
-							function check (d) {
-								for (let {row: r, col: c} of d) {
-									if (self.checkCheckerTurn(field[i][j], r, c) == 2)
-										return true;
-								}
-								return false;
-							}
-							if (check(field.getDiagonal(i, j, true)) || check(field.getDiagonal(i, j, false)))
+				for (let i = 0; i < 8; i++)
+					for (let j = 0; j < 8; j++)
+						if ((field[i][j] != checker) && (field[i][j].color == checker.color))
+							if (this.checkEatingTurns(field[i][j]))
 								return 0;
-						}
-					}
-				}
 				return 1;
 		}
 	}
 
-	this.makeTurn = function ({checker, row, col}) {
-		let checkRes = this.checkTurn({checker, row, col});
+	this.checkWin = function () {
+		let c1 = 0, c2 = 0;
+		for (let i = 0; i < 8; i++) {
+			for (let j = 0; j < 8; j++) {
+				if (this.field[i][j].color === 'white') c1++;
+				else if (this.field[i][j].color === 'black') c2++;
+			}
+		}
+		if (c1 === 0) return 'black';
+		else if (c2 === 0) return 'white';
+		else return false;
+	}
+
+	this.makeTurn = function (checker, row, col) {
+		let checkRes = this.checkTurn(checker, row, col);
 		let {row: r, col: c} = checker;
 		switch (checkRes) {
 			case 0: return 0;
 			case 3: // actions under 1, 2 and 3 states are same: we need to delete all checkers that are on way and move right checker
 			case 2:
 				// remove all enemy checkers from path
-				for (let c = Math.sign(r - row); row !== r; c += Math.sign(r - row)) // it's not important if it's row or col comparsion
-					this.deleteChecker(row + c, col + c);
+				for (let k = 1; row + k * Math.sign(r - row) !== r; k++) // it's not important if it's row or col comparsion
+					this.deleteChecker(r + k * Math.sign(row - r), c + k * Math.sign(col - c));
 			case 1:
 				// replace checker to new pos
 				this.replaceChecker(r, c, row, col);
-				return checkRes;
+				if ((!checker.queen) && (((checker.color === 'white') && (row === 0))
+					|| ((checker.color === 'black') && (row === 7)))) checker.queen = true;
+				break;
+		}
+		/*if (this.checkWin())
+			*/
+		if ((checkRes == 2) && this.checkEatingTurns(this.field[row][col]))
+			return 3;
+		else if (checkRes == 0) {
+			return 0;
+		}
+		else {
+			this.changeOrder();
+			return checkRes;
 		}
 	}
 
@@ -211,12 +220,30 @@ class InitCommand extends CheckersCommand {
 class TurnCommand extends CheckersCommand {
 	execute () {
 		// buffer will contain choosed checker and new position
-		let res = this.game.makeTurn(this.client.buffer);
-		// we must check here if client corresponds to right order
-		this.client.setState({
+		let res = this.game.makeTurn(this.client.state.checked, this.client.buffer.row, this.client.buffer.col);
+		let ns = {
 			field: this.game.field,
 			order: this.game.order
-		})
+		};
+		switch (res) {
+			case 0: case 1: case 2:
+				ns.checked = undefined;
+			case 3:
+				break;
+		}
+		this.client.setState(ns);
+		return res;
 	}
+	/*undo () {
+
+	}*/
 }
 
+/*let history = [];
+
+function executeCommand (cmd) {
+	if (cmd.execute())
+		history.push(cmd);
+}*/
+
+export {InitCommand, TurnCommand}

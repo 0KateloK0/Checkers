@@ -16,6 +16,10 @@
 	background: #CC6600;
 }
 
+.checker-field-checked {
+	background: green;
+}
+
 .checker-img {
 	width: 50px;
 }
