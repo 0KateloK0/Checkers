@@ -3,7 +3,7 @@ import './checkers.css';
 import {InitCommand, TurnCommand} from './gameLogic.js';
 
 function CheckerImg ({color, queen}) {
-	return <img className="checker-img" src={color + (queen ? '-queen' : '') + '.png'} alt=""/>
+	return <img className="checker-img" src={'./dist/' + color + (queen ? '-queen' : '') + '.png'} alt=""/>
 }
 
 function CheckerField (props) {

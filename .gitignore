@@ -1,7 +1,10 @@
 # dependencies
-/node_modules
+/app/node_modules
 /.pnp
 .pnp.js
+/virt
+/__pycache__
+/app/__pycache__
 
 # testing
 /coverage
