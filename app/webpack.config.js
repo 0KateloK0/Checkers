@@ -4,7 +4,8 @@ module.exports = {
 	entry: './src/index.js',
 	mode: 'none',
 	output: {
-		filename: './bundle.js'
+		filename: 'bundle.js',
+		// chunkFilename: 'bundle.js'
 	},
 	devServer: {
 		contentBase: path.join(__dirname, "dist"),
@@ -13,6 +14,11 @@ module.exports = {
 		watchContentBase: true,
 		progress: true
 	},
+	/*optimization: {
+		splitChunks: {
+			chunks: 'all'
+		}
+	},*/
 	module: {
 		rules: [
 			{

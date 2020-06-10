@@ -1,9 +1,11 @@
-import React from 'react';
-import './checkers.css';
+import React from 'react'; // let React = require('react');
+import './game.css';
 import {InitCommand, TurnCommand} from './gameLogic.js';
 
 function CheckerImg ({color, queen}) {
-	return <img className="checker-img" src={'./dist/' + color + (queen ? '-queen' : '') + '.png'} alt=""/>
+	return <img className="checker-img"
+		src={color + (queen ? '-queen' : '') + '.png'}
+		alt={color === 'white' ? 'wh' : 'bl'}/>
 }
 
 function CheckerField (props) {
@@ -16,7 +18,7 @@ function CheckerField (props) {
 		)
 }
 
-class Checkers extends React.Component {
+export default class Checkers extends React.Component {
 	constructor (props) {
 		super(props);
 		this.state = {
@@ -84,4 +86,4 @@ class Checkers extends React.Component {
 	}
 }
 
-export default Checkers;
+// export default Checkers;

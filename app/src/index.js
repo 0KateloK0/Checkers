@@ -1,11 +1,21 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
-import App from './App';
 
-ReactDOM.render(
-	<React.StrictMode>
-	<App />
-	</React.StrictMode>,
-	document.getElementById('root')
-);
+// this logic is from stack overflow
+const apps = {
+	game: () => import('./game.js'),
+	main: () => import('./main.js'),
+	login: () => import('./login.js')
+}
+
+function renderAppInEl (el) {
+	if (apps[el.id]) {
+		apps[el.id]().then(({default: App}) => {
+			ReactDOM.render( <App {...el.dataset}/>, el )
+		})
+	}
+}
+
+
+document.querySelectorAll('.__react-root').forEach(renderAppInEl);
