@@ -1,8 +1,8 @@
 let game = new (function () { // operator new here just to initialize 'this'
 	class Checker {
-		constructor (color, row, col) {
+		constructor (color, row, col, queen=false) {
 			this.color = color;
-			this.queen = false; // when it initializes it's always not queen
+			this.queen = queen;
 			this.changeCoords(row, col);
 		}
 		changeCoords(row, col) {
@@ -48,26 +48,36 @@ let game = new (function () { // operator new here just to initialize 'this'
 		},
 		flush () {
 			this.splice(0, this.length);
+			return this;
+		},
+		toString () {
+			return this.reduce((str, arr) => arr.reduce((s, el) => {
+					if (!el) return s + '0';
+					else if ((el.color === 'white') && !el.queen) return s + '1';
+					else if ((el.color === 'white') && el.queen) return s + '2';
+					else if ((el.color === 'black') && !el.queen) return s + '3';
+					else if ((el.color === 'black') && el.queen) return s + '4';
+				}, '') ,'');
+		},
+		fromString (s) {
+			if (s.length != 64) throw new Error('You trying to convert incompatible string');
+			this.splice(0, this.length, ...s.split('').reduce((arr, c, i) => {
+				if (i % 8 === 0) arr.push([]);
+				let j = Math.floor(i / 8);
+				if (c == 0) arr[j].push(0);
+				else if (c == 1) arr[j].push(new Checker('white', j, i % 8, false));
+				else if (c == 2) arr[j].push(new Checker('white', j, i % 8, true));
+				else if (c == 3) arr[j].push(new Checker('black', j, i % 8, false));
+				else if (c == 4) arr[j].push(new Checker('black', j, i % 8, true));
+				return arr;
+			}, []));
+			return this;
 		}
 	});
 
 	this.init = function () {
-		let field = this.field; // this is not copy because we must change original array. BE CAREFUL!
-		field.flush(); // just to be sure. and this might be possible if in same room game restarts
-		for (let i = 0; i < 8; i++) {
-			field.push([]);
-			for (let j = 0; j < 8; j++) {
-				if (i % 2 === j % 2) {
-					if (i < 3)
-						field[i].push(new Checker('black', i, j));
-					else if (i > 4)
-						field[i].push(new Checker('white', i, j));
-					else
-						field[i].push(0);
-				}
-				else field[i].push(0);
-			}
-		}
+		this.field.fromString('03030303' + '30303030' + '03030303' + '00000000' + '00000000' +
+			'10101010' + '01010101' + '10101010');
 		this.order = 'white';
 	}
 
@@ -165,12 +175,12 @@ let game = new (function () { // operator new here just to initialize 'this'
 		else return false;
 	}
 
-	this.makeTurn = function (checker, row, col) {
+	this.makeTurn = function (checker, row, col, cont=false) {
 		let checkRes = this.checkTurn(checker, row, col);
 		let {row: r, col: c} = checker;
+		if (cont && (checkRes === 1)) return 0;
 		switch (checkRes) {
 			case 0: return 0;
-			case 3: // actions under 1, 2 and 3 states are same: we need to delete all checkers that are on way and move right checker
 			case 2:
 				// remove all enemy checkers from path
 				for (let k = 1; row + k * Math.sign(r - row) !== r; k++) // it's not important if it's row or col comparsion
@@ -182,13 +192,13 @@ let game = new (function () { // operator new here just to initialize 'this'
 					|| ((checker.color === 'black') && (row === 7)))) checker.queen = true;
 				break;
 		}
-		/*if (this.checkWin())
-			*/
+		return this.postProc(checkRes, row, col);
+	}
+
+	this.postProc = function (checkRes, row, col) {
+		// assumes checkRes is not 0
 		if ((checkRes == 2) && this.checkEatingTurns(this.field[row][col]))
 			return 3;
-		else if (checkRes == 0) {
-			return 0;
-		}
 		else {
 			this.changeOrder();
 			return checkRes;
@@ -204,46 +214,66 @@ class CheckersCommand {
 		this.client = client;
 		this.game = game;
 	}
+	saveBackup () {
+		this.backup = this.game.field;
+	}
 }
 
 // init command also must be here
 class InitCommand extends CheckersCommand {
 	execute () {
 		this.game.init();
-		this.client.setState({
+		return {
+			state: 'finished',
 			field: this.game.field,
-			order: this.game.order // this thing will not exist after i'll create server
-		});
+			order: this.game.order
+		}
 	}
 }
 
 class TurnCommand extends CheckersCommand {
-	execute () {
-		// buffer will contain choosed checker and new position
-		let res = this.game.makeTurn(this.client.state.checked, this.client.buffer.row, this.client.buffer.col);
-		let ns = {
-			field: this.game.field,
-			order: this.game.order
-		};
-		switch (res) {
-			case 0: case 1: case 2:
-				ns.checked = undefined;
-			case 3:
-				break;
-		}
-		this.client.setState(ns);
-		return res;
+	constructor (client) {
+		super(...arguments);
+		this.history = [];
 	}
-	/*undo () {
 
-	}*/
+	set selection (value) {
+		let {row, col} = value;
+		if (this.game.field[row][col].color != this.game.order) throw new Error('Incorrect selection');
+		this.checked = this.game.field[row][col];
+	}
+
+	get selection () { return this.checked }
+
+	execute () {
+		if (this.state === 'finished') throw new Error('This turn has already been finished');
+		let {row, col} = this.client.buffer;
+		this.saveBackup();
+		// since client don't change command object, it's state saves from previous turn, so i can do this
+		let res = this.game.makeTurn(this.selection, row, col, this.state === 'unfinished');
+		if (res === 0) {
+			this.state = 'rejected';
+			return false;
+		}
+		else {
+			if (res === 3) this.state = 'unfinished';
+			else this.state = 'finished';
+			return {
+				field: this.game.field,
+				order: this.game.order,
+				state: this.state
+			}
+		}
+	}
 }
 
-/*let history = [];
+class CheckWinCommand extends CheckersCommand {
+	execute () {
+		return {
+			value: this.game.checkWin(),
+			state: 'service'
+		}
+	}
+}
 
-function executeCommand (cmd) {
-	if (cmd.execute())
-		history.push(cmd);
-}*/
-
-export {InitCommand, TurnCommand}
+export {InitCommand, TurnCommand, CheckWinCommand}

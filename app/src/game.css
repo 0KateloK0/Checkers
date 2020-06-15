@@ -1,25 +1,98 @@
-.field {
+.app {
+	display: flex;
+	justify-content: space-around;
+	-ms-align-items: center;
+	align-items: center;
+	padding: 30px 50px;
+}
+
+.game {
 	display: grid;
-	grid-template-columns: repeat(8, 50px);
-	grid-template-rows: repeat(8, 50px);
+	grid-template-columns: 1fr auto 1fr;
+	grid-template-rows: 1fr 0.5fr;
+	grid-template-areas: "player1 game player2"
+						 "chat chat list";
 }
 
-.checker-field {
-
+.player1 {
+	grid-area: player1;
 }
 
-.checker-field-white {
-	background: #FFFF66;
+.player2 {
+	grid-area: player2;
 }
 
-.checker-field-black {
-	background: #CC6600;
+.game-container {
+	grid-area: game;
 }
 
-.checker-field-checked {
-	background: green;
+.chat-container {
+	grid-area: chat;
 }
 
-.checker-img {
-	width: 50px;
+.players-list-container {
+	grid-area: list;
+}
+
+.avatar-img {
+	width: 150px;
+}
+
+.timer {
+	text-align: center;
+}
+
+.figures {
+	display: grid;
+	grid-template-columns: repeat(13, 15px); /* 13 here instead of 12 cause in other case checkers would stick out */
+	flex-direction: row-reverse;
+}
+
+.figures__checker-img {
+	position: relative;
+	width: 200%;
+	opacity: 0.5;
+}
+
+.figures__checker-img_visible {
+	opacity: 1;
+}
+
+.FIO {
+	font-family: 'Open-sans';
+}
+
+.player-container {
+	display: flex;
+}
+
+.info.reverse, .reverse.profile {
+	flex-direction: column-reverse;
+}
+
+.profile {
+	display: flex;
+	flex-direction: column;
+	-ms-align-items: center;
+	align-items: center;
+	justify-content: space-around;
+}
+
+.info {
+	display: flex;
+	justify-content: space-around;
+	-webkit-flex-direction: column;
+	-moz-flex-direction: column;
+	-ms-flex-direction: column;
+	-o-flex-direction: column;
+	flex-direction: column;
+}
+
+.info-container {
+	display: -webkit-flex;
+	display: -moz-flex;
+	display: -ms-flex;
+	display: -o-flex;
+	display: flex;
+	justify-content: space-around;
 }

@@ -1,0 +1,76 @@
+.checkers-field {
+	display: grid;
+	grid-template-columns: repeat(8, 50px);
+	grid-template-rows: repeat(8, 50px);
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	-o-user-select: none;
+	user-select: none;
+}
+
+.checkers-cell {
+	display: flex;
+	justify-content: space-around;
+	align-items: center;
+}
+
+.checkers-cell-white {
+	background: #F0F8F0;
+}
+
+.checkers-cell-black {
+	background: #708090;
+}
+
+.checkers-cell-checked {
+	background: green;
+}
+
+.checkers-img {
+	width: 43px;
+}
+
+.checkers-UI {
+	display: grid;
+	grid-template: [row1-start] ". top ." 50px [row1-end]
+					[row2-start] "left main right" auto [row2-end]
+					[row3-start] ". bottom ." 50px [row3-end]
+					/ 50px auto 50px;
+}
+
+.checkers-UI__top-letters { grid-area: top; }
+.checkers-UI__left-letters { grid-area: left; }
+.checkers-UI__right-letters { grid-area: right; }
+.checkers-UI__bottom-letters { grid-area: bottom; }
+
+.checkers-UI__letters {
+	display: flex;
+	justify-content: space-around;
+	align-items: center;
+}
+
+.checkers-UI__left-letters, .checkers-UI__right-letters {
+	flex-direction: column-reverse;
+}
+
+.reverse.checkers-UI__left-letters, .reverse.checkers-UI__right-letters {
+	flex-direction: column;
+}
+
+.reverse.checkers-UI__top-letters, .reverse.checkers-UI__bottom-letters {
+	flex-direction: row-reverse;
+}
+
+.checkers {
+	grid-area: main;
+	cursor: pointer;
+}
+
+.reverse.checkers {
+	transform: rotate(180deg);
+}
+
+.checkers-UI__letter {
+	font-family: 'Montserrat';
+}

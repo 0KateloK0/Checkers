@@ -220,10 +220,10 @@ var apps = {
     return __webpack_require__.e(/* import() */ 1).then(__webpack_require__.bind(null, 16));
   },
   main: function main() {
-    return __webpack_require__.e(/* import() */ 2).then(__webpack_require__.t.bind(null, 20, 7));
+    return __webpack_require__.e(/* import() */ 2).then(__webpack_require__.t.bind(null, 17, 7));
   },
   login: function login() {
-    return __webpack_require__.e(/* import() */ 3).then(__webpack_require__.t.bind(null, 21, 7));
+    return __webpack_require__.e(/* import() */ 3).then(__webpack_require__.t.bind(null, 18, 7));
   }
 };
 
@@ -29005,7 +29005,7 @@ module.exports = function (list, options) {
 var ___CSS_LOADER_API_IMPORT___ = __webpack_require__(15);
 exports = ___CSS_LOADER_API_IMPORT___(false);
 // Module
-exports.push([module.i, "body {\n\tmargin: 0;\n}", ""]);
+exports.push([module.i, "body {\n\tmargin: 0;\n\tfont-family: 'Montserrat';\n}\n\n.__react-root {\n\tposition: absolute;\n\ttop: 0;\n\tbottom: 0;\n\tleft: 0;\n\tright: 0;\n\tdisplay: block;\n\tmargin: auto;\n}", ""]);
 // Exports
 module.exports = exports;
 
