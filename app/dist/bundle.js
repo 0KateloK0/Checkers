@@ -220,10 +220,10 @@ var apps = {
     return __webpack_require__.e(/* import() */ 1).then(__webpack_require__.bind(null, 16));
   },
   main: function main() {
-    return __webpack_require__.e(/* import() */ 2).then(__webpack_require__.t.bind(null, 17, 7));
+    return __webpack_require__.e(/* import() */ 2).then(__webpack_require__.bind(null, 17));
   },
   login: function login() {
-    return __webpack_require__.e(/* import() */ 3).then(__webpack_require__.t.bind(null, 18, 7));
+    return __webpack_require__.e(/* import() */ 3).then(__webpack_require__.bind(null, 18));
   }
 };
 

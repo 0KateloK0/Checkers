@@ -1,19 +1,63 @@
-from flask import render_template, request, send_from_directory
-from app import app
+from flask import render_template, request, send_from_directory, url_for, redirect
+from app import app, db
+from app.models import User # Room, Player, 
+from flask_login import current_user, logout_user, login_user
+from app.forms import LoginForm, RegisterForm
 
 @app.route('/')
 @app.route('/index')
 def index ():
-	return render_template('index.html')
+	return render_template('index.html', title='Main page')
 
-@app.route('/login')
+@app.route('/register', methods=['GET', 'POST'])
+def register ():
+	if current_user.is_authenticated:
+		return redirect(url_for('index'))
+	form = RegisterForm()
+	if form.validate_on_submit():
+		user = User(FIO=form.get_FIO(), email=form.email.data)
+		user.set_password(form.password.data)
+		db.session.add(user)
+		db.session.commit()
+		return redirect(url_for('index'))
+	return render_template('register.html', form=form, title='Registration')
+
+@app.route('/login', methods=['GET', 'POST'])
 def login ():
-	return render_template('login.html')
+	if current_user.is_authenticated:
+		return redirect(url_for('index'))
+	form = LoginForm()
+	if form.validate_on_submit():
+		user = User.query.filter_by(email=form.email.data).first()
+		if user is None or not user.check_password(form.password.data):
+			return redirect(url_for('login'))
+		login_user(user, remember=form.rem.data)
+		return redirect(url_for('index'))
+	return render_template('login.html', form=form, title='Login')
 
-@app.route('/game/<int:game_id>') #, methods=['GET', 'POST']
+@app.route('/logout')
+def logout ():
+	logout_user()
+	return redirect(url_for('index'))
+
+@app.route('/game/<int:game_id>', methods=['GET', 'POST'])
 def game (game_id):
-	return render_template('game.html')
+	# if Room.query.filter_by(id=game_id).count() == 1:
+	# 	print('lol')
+	# else:
+	# 	room = Room(id=game_id)
+	# 	# if current_user.is_authenticated:
+	# 	# 	current_user.query().\
+	# 	# 		update({User.room: room}, synchronize_session=False)
+	# 	db.session.add(room)
+	# 	db.session.commit()
+	return render_template('game.html', title='Game'+game_id)
 
+@app.route('/<path:path>')
 @app.route('/game/<path:path>')
 def serve_static_file (path):
 	return send_from_directory('dist', path)
+
+@app.errorhandler(404)
+def error404 (error):
+	return render_template('error404.html', error=error, title='Error')

@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 	<meta charset="UTF-8">
-	<title>Checkers</title>
+	<title>{{title}}</title>
 	<style type="text/css">
 		@font-face {
 			font-family: Montserrat;
@@ -19,7 +19,14 @@
 	</style>
 </head>
 <body>
-	<!-- make here nav bar template -->
+	<!-- temporary -->
+	<div class="nav">
+		{% if current_user.is_anonymous %}
+			<a href="{{ url_for('login') }}">Login</a>
+		{% else %}
+			<a href="{{ url_for('logout') }}">Logout</a>
+		{% endif %}
+	</div>
 	{% block react %} {% endblock %}
 	<script type="text/javascript" src="bundle.js"></script>
 </body>

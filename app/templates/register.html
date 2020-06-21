@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block react %}
+	<form action="" method="POST">
+		{{ form.hidden_tag() }}
+		<label>
+			{{ form.first_name.label }}
+			{{ form.first_name(size=100) }}
+		</label>
+		<br>
+		<label>
+			{{ form.second_name.label }}
+			{{ form.second_name(size=100) }}
+		</label>
+		<br>
+		<label>
+			{{ form.email.label }}
+			{{ form.email(size=100) }}
+		</label>
+		<br>
+		<label>
+			{{ form.password.label }}
+			{{ form.password(size=100) }}
+		</label>
+		<br>
+		<label>
+			{{ form.password2.label }}
+			{{ form.password2(size=100) }}
+		</label>
+		<br>
+		<label>
+			{{ form.submit() }}
+		</label>
+	</form>
+{% endblock %}

@@ -1,3 +1,26 @@
 {% extends "base.html" %}
 
-{% block react %} <div id="login" class="__react-root"></div> {% endblock %}
+{% block react %}
+<!-- <div id="login" class="__react-root"></div> -->
+	<form action="" method="POST">
+		{{ form.hidden_tag() }}
+		<label>
+			{{ form.email.label }}
+			{{ form.email() }}
+		</label>
+		<br>
+		<label>
+			{{ form.password.label }}
+			{{ form.password() }}
+		</label>
+		<br>
+		<label>
+			{{ form.rem.label }}
+			{{ form.rem() }}
+		</label>
+		<br>
+		<label>
+			{{ form.submit() }}
+		</label>
+	</form>
+{% endblock %}
