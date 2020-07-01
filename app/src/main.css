@@ -1,0 +1,14 @@
+.main {
+	padding: 20px;
+}
+
+.room {
+	border-radius: 5px;
+	border: 1px solid silver;
+	padding: 5px;
+	display: inline-block;
+}
+
+.room-options {
+	height: 20px;
+}

@@ -1,7 +1,7 @@
 .checkers-field {
 	display: grid;
-	grid-template-columns: repeat(8, 50px);
-	grid-template-rows: repeat(8, 50px);
+	grid-template-columns: repeat(8, 1fr);
+	grid-template-rows: repeat(8, 1fr);
 	-webkit-user-select: none;
 	-moz-user-select: none;
 	-ms-user-select: none;
@@ -13,6 +13,7 @@
 	display: flex;
 	justify-content: space-around;
 	align-items: center;
+	padding: 7%;
 }
 
 .checkers-cell-white {
@@ -28,15 +29,15 @@
 }
 
 .checkers-img {
-	width: 43px;
+	width: 100%;
 }
 
 .checkers-UI {
 	display: grid;
-	grid-template: [row1-start] ". top ." 50px [row1-end]
-					[row2-start] "left main right" auto [row2-end]
-					[row3-start] ". bottom ." 50px [row3-end]
-					/ 50px auto 50px;
+	grid-template: [row1-start] ". top ." 1fr [row1-end]
+					[row2-start] "left main right" 8fr [row2-end]
+					[row3-start] ". bottom ." 1fr [row3-end]
+					/ 1fr 8fr 1fr;
 }
 
 .checkers-UI__top-letters { grid-area: top; }

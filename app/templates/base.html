@@ -21,11 +21,16 @@
 <body>
 	<!-- temporary -->
 	<div class="nav">
-		{% if current_user.is_anonymous %}
-			<a href="{{ url_for('login') }}">Login</a>
-		{% else %}
-			<a href="{{ url_for('logout') }}">Logout</a>
-		{% endif %}
+		<div class="logo">
+			
+		</div>
+		<div class="user">
+			{% if current_user.is_anonymous %}
+				<a class="user__log-btn" href="{{ url_for('login') }}">Login</a>
+			{% else %}
+				<a class="user__log-btn" href="{{ url_for('logout') }}">Logout</a>
+			{% endif %}
+		</div>
 	</div>
 	{% block react %} {% endblock %}
 	<script type="text/javascript" src="bundle.js"></script>

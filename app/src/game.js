@@ -1,8 +1,19 @@
-import React from 'react'; // let React = require('react');
+import React from 'react';
 import './game.css';
-import {InitCommand, TurnCommand, CheckWinCommand} from './gameLogic.js';
+import {Game, InitCommand, TurnCommand, CheckWinCommand} from './gameLogic.js';
 import {Checkers, CheckersUI} from './checkers';
+/*import io from 'socket.io-client';
 
+let promisify = f => function (...args) {
+	return new Promise((resolve, reject) => {
+		function callback (err, results) {
+			if (err) reject(err);
+			else resolve(results);
+		}
+		f.call(this, ...args, callback);
+	})
+}
+*/
 function Timer (props) {
 	let t = Math.floor(props.time / 1000);
 	return (
@@ -50,12 +61,12 @@ class Figures extends React.PureComponent {
 function History (props) {
 	return (
 		<div className="history">
-			<ul>
+			<ol className="history__list">
 				{props.history.map((a, i) => 
-					<li key={i}>
-						<span>{i}</span><span>{a.toString()}</span>
+					<li key={i} className="history__list-el">
+						<span className="history__list-el-span">{a.toString()}</span>
 					</li>)}
-			</ul>
+			</ol>
 		</div>
 		)
 }
@@ -64,31 +75,47 @@ class PlayerInfo extends React.Component {
 	render () {
 		let {player: {
 			user,
-			timeLeft,
 			color
-		}, field, reverse} = this.props;
+		}, field, reverse, history} = this.props;
 		let amount = field.reduce((arr, el) =>
 				arr.concat(el.reduce((a, b) => b.color == color ? a.concat(b) : a, [])), []).length;
 		return (
 			<div className="info-container">
 				<div className={'info' + (reverse ? ' reverse' : '')}>
 					<Profile user={user} reverse={reverse}/>
-					<Timer time={timeLeft}/>
+					<div className="history-container">
+						<History history={history} color={color}/>
+					</div>
 					<Figures amount={amount} color={color}/>
-				</div>
-				<div className="history-container">
-					<History history={[]} color={color}/>
 				</div>
 			</div>
 			)
 	}
 }
 
-class PlayersList extends React.Component {
+class Player extends React.PureComponent {
+	render () {
+		let {player: {
+			state,
+			user: {FIO}
+		}, ...rest} = this.props;
+		return (
+			<li {...rest}>
+				<span className="player-list__info-FIO">{FIO}</span>
+			</li>
+			)
+	}
+}
+
+class PlayersList extends React.PureComponent {
 	render () {
 		return (
 			<div className="players">
-
+				<ul className="players-list">
+				{this.props.players.map(
+					(a, i) => <Player key={i} className="players-list__info" player={a}></Player>
+					)}
+				</ul>
 			</div>
 			)
 	}
@@ -104,6 +131,17 @@ class Chat extends React.Component {
 	}
 }
 
+function GameStats ({
+	time1, time2, order
+}={}) {
+	return (
+		<div className="gameStats">
+			<Timer time={time2} />
+			<Timer time={time1} />
+		</div>
+		)
+}
+
 export default class CheckersGame extends React.Component {
 	constructor (props) {
 		super(props);
@@ -113,31 +151,40 @@ export default class CheckersGame extends React.Component {
 			win: false
 		}
 		this.handleCheckersClick = this.handleCheckersClick.bind(this);
-		this.turn = new TurnCommand(this);
-		this.checkWin = new CheckWinCommand(this);
-		this.init = new InitCommand(this);
 		this.history = [];
-
+		this.players = [] // temporary
 		// fiction
 		this.player1 = {
 			user: {
-				avatarSrc: 'black-queen.png',
-				FIO: 'Artem Ebat',
+				avatarSrc: 'Artem.jpg',
+				FIO: 'Artem Katelkin',
 				money: 25347,
 				rating: 1987,
+			},
+			timeLeft: 228000,
+			color: 'white'
+		}
+		this.player2 = {
+			user: {
+				avatarSrc: 'Kirill.jpg',
+				FIO: 'Kirill Glushkov',
+				money: 18967,
+				rating: 1999,
 			},
 			timeLeft: 224000,
 			color: 'black'
 		}
-		this.player2 = {
-			user: {
-				avatarSrc: 'white-queen.png',
-				FIO: 'Kirill Ebat',
-				money: 18967,
-				rating: 1999,
-			},
-			timeLeft: 228000,
-			color: 'white'
+	}
+
+	makeHistoryObject ({
+			selection: {row: r, col: c}, row, col
+		}={}) {
+		return {
+			r, c, row, col,
+			toString () {
+				let ABC = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+				return `${ABC[r]}${c}-${ABC[row]}${col}`;
+			}
 		}
 	}
 
@@ -146,7 +193,11 @@ export default class CheckersGame extends React.Component {
 		this.setState({...state, win: false});
 	}
 
-	componentDidMount () { this.restart(); }
+	componentDidMount () {
+		this.game = new Game();
+		let init = new InitCommand(this, this.game);
+		this.executeCommand(init);
+	}
 
 	handleCheckersClick (e) {
 		let [row, col] = [...e.target.closest('.checkers-cell').getAttribute('pos').split('_').map(Number)];
@@ -168,12 +219,12 @@ export default class CheckersGame extends React.Component {
 				this.setState({field});
 				if (state === 'finished') {
 					this.setState({ checked: undefined, order });
-					let cw = this.executeCommand(this.checkWin).value;
+					let cw = this.game.checkWin();
 					if (cw)
 						this.setState({
 							win: cw
 						})
-					this.turn = new TurnCommand(this);
+					this.turn = new TurnCommand(this, game);
 				}
 			}
 			else
@@ -185,8 +236,13 @@ export default class CheckersGame extends React.Component {
 
 	executeCommand (command) {
 		let res = command.execute();
-		if (res.state === 'finished')
-			this.history.push(command);
+		if (res.state === 'finished') {
+			this.history.push(this.makeHistoryObject(command));
+			/*console.log(JSON.stringify(command));
+			socket.emit('turn', {
+				data: JSON.stringify(command)
+			})*/
+		}
 		return res;
 	}
 
@@ -195,9 +251,16 @@ export default class CheckersGame extends React.Component {
 			<div className="app">
 				<div className="game">
 					<div className="player-container player1">
-						<PlayerInfo player={this.player1} field={this.state.field}/>
+						<PlayerInfo
+							player={this.player2}
+							field={this.state.field}
+							history={this.history} />
 					</div>
 					<div className="game-container">
+						<GameStats
+							time1={this.player1.timeLeft}
+							time2={this.player2.timeLeft} 
+							order={this.state.order} />
 						<CheckersUI
 							activePlayer={'white'}
 							onClick={this.handleCheckersClick}
@@ -205,13 +268,17 @@ export default class CheckersGame extends React.Component {
 							checked={this.state.checked} />
 					</div>
 					<div className="player-container player2">
-						<PlayerInfo player={this.player2} field={this.state.field} reverse={true}/>
+						<PlayerInfo
+							player={this.player1}
+							field={this.state.field}
+							reverse={true}
+							history={this.history} />
 					</div>
 					<div className="chat-container">
 						<Chat />
 					</div>
 					<div className="players-list-container">
-						<PlayersList />
+						<PlayersList players={this.players}/>
 					</div>
 				</div>
 			</div>

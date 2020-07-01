@@ -1,99 +1,104 @@
-let game = new (function () { // operator new here just to initialize 'this'
-	class Checker {
-		constructor (color, row, col, queen=false) {
-			this.color = color;
-			this.queen = queen;
-			this.changeCoords(row, col);
+class Game {
+	constructor () {
+		class Checker {
+			constructor (color, row, col, queen=false) {
+				this.color = color;
+				this.queen = queen;
+				this.changeCoords(row, col);
+			}
+			changeCoords(row, col) {
+				this.row = row;
+				this.col = col;
+			}
 		}
-		changeCoords(row, col) {
-			this.row = row;
-			this.col = col;
-		}
-	}
 
-	this.field = [];
-	Object.assign(this.field, {
-		getDiagonal (y, x, dir) {
-			// dir === true means left-right diagonal avd dir === false vice versa
-			let arr = Object.assign([], {
-				[Symbol.iterator] () {
-					let current = [].map.call(Object.keys(this), Number).filter(a => !isNaN(a)).
-									reduce((a, b) => b < a ? b : a); // finds smallest index 
-					let self = this;
-					return {
-						current,
-						next () {
-							if (self[current] !== undefined)
-								return { value: self[current++], done: false }
-							else
-								return { done: true }
+		this.field = [];
+		Object.assign(this.field, {
+			getDiagonal (y, x, dir) {
+				// dir === true means left-right diagonal avd dir === false vice versa
+				let arr = Object.assign([], {
+					[Symbol.iterator] () {
+						let current = [].map.call(Object.keys(this), Number).filter(a => !isNaN(a)).
+										reduce((a, b) => b < a ? b : a); // finds smallest index 
+						let self = this;
+						return {
+							current,
+							next () {
+								if (self[current] !== undefined)
+									return { value: self[current++], done: false }
+								else
+									return { done: true }
+							}
 						}
 					}
+				});
+				y = Number(y); x = Number(x); // if it'll pass as string this will cause to empty array as result
+				if (dir) {
+					for (let c = 0; (y + c < 8) && (x + c < 8); c++)
+						arr[c] = this[y + c][x + c];
+					for (let c = -1; (y + c >= 0) && (x + c >= 0); c--)
+						arr[c] = this[y + c][x + c];
 				}
-			});
-			y = Number(y); x = Number(x); // if it'll pass as string this will cause to empty array as result
-			if (dir) {
-				for (let c = 0; (y + c < 8) && (x + c < 8); c++)
-					arr[c] = this[y + c][x + c];
-				for (let c = -1; (y + c >= 0) && (x + c >= 0); c--)
-					arr[c] = this[y + c][x + c];
+				else {
+					for (let c = 0; (y + c < 8) && (x - c >= 0); c++)
+						arr[c] = this[y + c][x - c];
+					for (let c = -1; (y + c >= 0) && (x - c < 8); c--)
+						arr[c] = this[y + c][x - c];
+				}
+				return arr; // add iterator method to this array obj
+			},
+			flush () {
+				this.splice(0, this.length);
+				return this;
+			},
+			toString () {
+				return this.reduce((str, arr) => arr.reduce((s, el) => {
+						if (!el) return s + '0';
+						else if ((el.color === 'white') && !el.queen) return s + '1';
+						else if ((el.color === 'white') && el.queen) return s + '2';
+						else if ((el.color === 'black') && !el.queen) return s + '3';
+						else if ((el.color === 'black') && el.queen) return s + '4';
+					}, '') ,'');
+			},
+			fromString (s) {
+				if (s.length != 64) throw new Error('You trying to convert incompatible string');
+				this.splice(0, this.length, ...s.split('').reduce((arr, c, i) => {
+					if (i % 8 === 0) arr.push([]);
+					let j = Math.floor(i / 8);
+					if (c == 0) arr[j].push(0);
+					else if (c == 1) arr[j].push(new Checker('white', j, i % 8, false));
+					else if (c == 2) arr[j].push(new Checker('white', j, i % 8, true));
+					else if (c == 3) arr[j].push(new Checker('black', j, i % 8, false));
+					else if (c == 4) arr[j].push(new Checker('black', j, i % 8, true));
+					return arr;
+				}, []));
+				return this;
 			}
-			else {
-				for (let c = 0; (y + c < 8) && (x - c >= 0); c++)
-					arr[c] = this[y + c][x - c];
-				for (let c = -1; (y + c >= 0) && (x - c < 8); c--)
-					arr[c] = this[y + c][x - c];
-			}
-			return arr; // add iterator method to this array obj
-		},
-		flush () {
-			this.splice(0, this.length);
-			return this;
-		},
-		toString () {
-			return this.reduce((str, arr) => arr.reduce((s, el) => {
-					if (!el) return s + '0';
-					else if ((el.color === 'white') && !el.queen) return s + '1';
-					else if ((el.color === 'white') && el.queen) return s + '2';
-					else if ((el.color === 'black') && !el.queen) return s + '3';
-					else if ((el.color === 'black') && el.queen) return s + '4';
-				}, '') ,'');
-		},
-		fromString (s) {
-			if (s.length != 64) throw new Error('You trying to convert incompatible string');
-			this.splice(0, this.length, ...s.split('').reduce((arr, c, i) => {
-				if (i % 8 === 0) arr.push([]);
-				let j = Math.floor(i / 8);
-				if (c == 0) arr[j].push(0);
-				else if (c == 1) arr[j].push(new Checker('white', j, i % 8, false));
-				else if (c == 2) arr[j].push(new Checker('white', j, i % 8, true));
-				else if (c == 3) arr[j].push(new Checker('black', j, i % 8, false));
-				else if (c == 4) arr[j].push(new Checker('black', j, i % 8, true));
-				return arr;
-			}, []));
-			return this;
-		}
-	});
+		});
+		// this.init();
+	}
 
-	this.init = function () {
+	init () {
 		this.field.fromString('03030303' + '30303030' + '03030303' + '00000000' + '00000000' +
 			'10101010' + '01010101' + '10101010');
 		this.order = 'white';
 	}
 
-	this.changeOrder = function () {
+	changeOrder () {
 		this.order = this.order == 'white' ? 'black' : 'white';
 	}
 
-	this.replaceChecker = function (r, c, row, col) {
+	replaceChecker (r, c, row, col) {
 		this.field[row][col] = this.field[r][c];
 		this.field[row][col].changeCoords(row, col);
 		this.field[r][c] = 0;
 	}
-	this.deleteChecker = function (row, col) {
+
+	deleteChecker (row, col) {
 		this.field[row][col] = 0;
 	}
-	this.checkCheckerTurn = function (checker, row, col) {
+
+	checkCheckerTurn (checker, row, col) {
 		let {row: r, col: c, queen, color} = {...checker};
 		// checks that turn is possible (false - 0) and if so (1) and there is ONE enemy on way return 2 (eating turn)
 		// this thing assumes that there are no other eating turn
@@ -126,24 +131,7 @@ let game = new (function () { // operator new here just to initialize 'this'
 		else return 0;
 	}
 
-	this.checkEatingTurns = function (checker) {
-		let {row, col} = checker;
-		for (let i = row - 1; i >= 0; i--) {
-			for (let j = col - 1; j >= 0; j--)
-				if (this.checkCheckerTurn(checker, i, j) === 2) return true;
-			for (let j = col + 1; j < 8; j++)
-				if (this.checkCheckerTurn(checker, i, j) === 2) return true;
-		}
-		for (let i = row + 1; i < 8; i++) {
-			for (let j = col - 1; j >= 0; j--)
-				if (this.checkCheckerTurn(checker, i, j) === 2) return true;
-			for (let j = col + 1; j < 8; j++)
-				if (this.checkCheckerTurn(checker, i, j) === 2) return true;
-		}
-		return false;
-	}
-
-	this.checkTurn = function (checker, row, col) {
+	checkTurn (checker, row, col) {
 		// there is no need to check wheter checker is right color or not. game does not know which client matches which color
 		let field = this.field;
 		switch (this.checkCheckerTurn(checker, row, col)) {
@@ -162,7 +150,24 @@ let game = new (function () { // operator new here just to initialize 'this'
 		}
 	}
 
-	this.checkWin = function () {
+	checkEatingTurns (checker) {
+		let {row, col} = checker;
+		for (let i = row - 1; i >= 0; i--) {
+			for (let j = col - 1; j >= 0; j--)
+				if (this.checkCheckerTurn(checker, i, j) === 2) return true;
+			for (let j = col + 1; j < 8; j++)
+				if (this.checkCheckerTurn(checker, i, j) === 2) return true;
+		}
+		for (let i = row + 1; i < 8; i++) {
+			for (let j = col - 1; j >= 0; j--)
+				if (this.checkCheckerTurn(checker, i, j) === 2) return true;
+			for (let j = col + 1; j < 8; j++)
+				if (this.checkCheckerTurn(checker, i, j) === 2) return true;
+		}
+		return false;
+	}
+
+	checkWin () {
 		let c1 = 0, c2 = 0;
 		for (let i = 0; i < 8; i++) {
 			for (let j = 0; j < 8; j++) {
@@ -175,7 +180,7 @@ let game = new (function () { // operator new here just to initialize 'this'
 		else return false;
 	}
 
-	this.makeTurn = function (checker, row, col, cont=false) {
+	makeTurn (checker, row, col, cont=false) {
 		let checkRes = this.checkTurn(checker, row, col);
 		let {row: r, col: c} = checker;
 		if (cont && (checkRes === 1)) return 0;
@@ -195,7 +200,7 @@ let game = new (function () { // operator new here just to initialize 'this'
 		return this.postProc(checkRes, row, col);
 	}
 
-	this.postProc = function (checkRes, row, col) {
+	postProc (checkRes, row, col) {
 		// assumes checkRes is not 0
 		if ((checkRes == 2) && this.checkEatingTurns(this.field[row][col]))
 			return 3;
@@ -204,13 +209,11 @@ let game = new (function () { // operator new here just to initialize 'this'
 			return checkRes;
 		}
 	}
-
-	this.init();
-})();
+}
 
 // just because i want to isolate whole game from UI part. After creation of server client and game properties will be set properly
 class CheckersCommand {
-	constructor (client) {
+	constructor (client, game) {
 		this.client = client;
 		this.game = game;
 	}
@@ -224,7 +227,7 @@ class InitCommand extends CheckersCommand {
 	execute () {
 		this.game.init();
 		return {
-			state: 'finished',
+			state: 'fuck up',
 			field: this.game.field,
 			order: this.game.order
 		}
@@ -232,7 +235,7 @@ class InitCommand extends CheckersCommand {
 }
 
 class TurnCommand extends CheckersCommand {
-	constructor (client) {
+	constructor () {
 		super(...arguments);
 		this.history = [];
 	}
@@ -257,7 +260,11 @@ class TurnCommand extends CheckersCommand {
 		}
 		else {
 			if (res === 3) this.state = 'unfinished';
-			else this.state = 'finished';
+			else {
+				this.state = 'finished';
+				this.row = row;
+				this.col = col;
+			}
 			return {
 				field: this.game.field,
 				order: this.game.order,
@@ -276,4 +283,4 @@ class CheckWinCommand extends CheckersCommand {
 	}
 }
 
-export {InitCommand, TurnCommand, CheckWinCommand}
+export {Game, InitCommand, TurnCommand, CheckWinCommand}

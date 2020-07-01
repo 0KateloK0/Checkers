@@ -1,26 +1,22 @@
 {% extends "base.html" %}
 
 {% block react %}
-<!-- <div id="login" class="__react-root"></div> -->
-	<form action="" method="POST">
-		{{ form.hidden_tag() }}
-		<label>
-			{{ form.email.label }}
-			{{ form.email() }}
-		</label>
-		<br>
-		<label>
-			{{ form.password.label }}
-			{{ form.password() }}
-		</label>
-		<br>
-		<label>
-			{{ form.rem.label }}
-			{{ form.rem() }}
-		</label>
-		<br>
-		<label>
-			{{ form.submit() }}
-		</label>
-	</form>
+	<div id="login" class="__react-root">
+		<form action="" method="POST" class="login-form">
+			{{ form.hidden_tag() }}
+			<label class="login-form__label">
+				{{ form.email(placeholder="Email", class="email") }}
+			</label>
+			<label class="login-form__label">
+				{{ form.password(placeholder="Password", class="password") }}
+			</label>
+			<label class="login-form__label">
+				{{ form.rem.label }}
+				{{ form.rem() }}
+			</label>
+			<label class="login-form__label">
+				{{ form.submit() }}
+			</label>
+		</form>
+	</div>
 {% endblock %}

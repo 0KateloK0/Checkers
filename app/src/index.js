@@ -12,7 +12,8 @@ const apps = {
 function renderAppInEl (el) {
 	if (apps[el.id]) {
 		apps[el.id]().then(({default: App}) => {
-			ReactDOM.render( <App {...el.dataset}/>, el )
+			if (App)
+				ReactDOM.render( <App {...el.dataset}/>, el )
 		})
 	}
 }

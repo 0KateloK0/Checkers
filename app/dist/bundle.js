@@ -217,13 +217,13 @@ __webpack_require__.r(__webpack_exports__);
 
 var apps = {
   game: function game() {
-    return __webpack_require__.e(/* import() */ 1).then(__webpack_require__.bind(null, 16));
+    return Promise.all(/* import() */[__webpack_require__.e(3), __webpack_require__.e(2)]).then(__webpack_require__.bind(null, 16));
   },
   main: function main() {
-    return __webpack_require__.e(/* import() */ 2).then(__webpack_require__.bind(null, 17));
+    return Promise.all(/* import() */[__webpack_require__.e(3), __webpack_require__.e(4)]).then(__webpack_require__.bind(null, 76));
   },
   login: function login() {
-    return __webpack_require__.e(/* import() */ 3).then(__webpack_require__.bind(null, 18));
+    return __webpack_require__.e(/* import() */ 5).then(__webpack_require__.bind(null, 79));
   }
 };
 
@@ -231,7 +231,7 @@ function renderAppInEl(el) {
   if (apps[el.id]) {
     apps[el.id]().then(function (_ref) {
       var App = _ref["default"];
-      react_dom__WEBPACK_IMPORTED_MODULE_1___default.a.render( /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(App, el.dataset), el);
+      if (App) react_dom__WEBPACK_IMPORTED_MODULE_1___default.a.render( /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(App, el.dataset), el);
     });
   }
 }
@@ -29005,7 +29005,7 @@ module.exports = function (list, options) {
 var ___CSS_LOADER_API_IMPORT___ = __webpack_require__(15);
 exports = ___CSS_LOADER_API_IMPORT___(false);
 // Module
-exports.push([module.i, "body {\n\tmargin: 0;\n\tfont-family: 'Montserrat';\n}\n\n.__react-root {\n\tposition: absolute;\n\ttop: 0;\n\tbottom: 0;\n\tleft: 0;\n\tright: 0;\n\tdisplay: block;\n\tmargin: auto;\n}", ""]);
+exports.push([module.i, "body {\n\tmargin: 0;\n\tfont-family: 'Montserrat';\n\t-webkit-box-sizing: border-box;\n\t-moz-box-sizing: border-box;\n\tbox-sizing: border-box;\n}\n\n.__react-root {\n\tmargin: auto;\n}\n\n.nav {\n\tdisplay: -webkit-flex;\n\tdisplay: -moz-flex;\n\tdisplay: -ms-flex;\n\tdisplay: -o-flex;\n\tdisplay: flex;\n\tjustify-content: space-around;\n\t-ms-align-items: center;\n\talign-items: center;\n\theight: 50px;\n\tborder-bottom: 2px solid silver;\n\tbackground: #F0F0FA;\n}\n\n.logo {\n\tdisplay: inline-block;\n}\n\n.user {\n\tdisplay: inline-block;\n}\n\n.user__log-btn {\n\ttext-decoration: none;\n\ttransition: .2s;\n}\n\n.user__log-btn:active {\n\tcolor: black;\n}\n\n.user__log-btn:hover {\n\tcolor: #A02010;\n\tcursor: pointer;\n}", ""]);
 // Exports
 module.exports = exports;
 
