@@ -115,7 +115,7 @@ var Figure = function Figure(props) {
     src: props.color + '.png',
     alt: "ch"
   });
-}; // pureComponent here is that with props.amount == new.amount React still renders el so that this might help
+}; // pureComponent is here beacuse React still render component even with props.amount == new.amount
 
 
 var Figures = /*#__PURE__*/function (_React$PureComponent) {
@@ -389,7 +389,8 @@ var CheckersGame = /*#__PURE__*/function (_React$Component3) {
     value: function componentDidMount() {
       this.game = new _gameLogic_js__WEBPACK_IMPORTED_MODULE_2__["Game"]();
       var init = new _gameLogic_js__WEBPACK_IMPORTED_MODULE_2__["InitCommand"](this, this.game);
-      this.executeCommand(init);
+      this.setState(init.execute());
+      this.turn = new _gameLogic_js__WEBPACK_IMPORTED_MODULE_2__["TurnCommand"](this, this.game); // this.executeCommand(init);
     }
   }, {
     key: "handleCheckersClick",
@@ -438,7 +439,15 @@ var CheckersGame = /*#__PURE__*/function (_React$Component3) {
             if (cw) this.setState({
               win: cw
             });
-            this.turn = new _gameLogic_js__WEBPACK_IMPORTED_MODULE_2__["TurnCommand"](this, game);
+            this.turn = new _gameLogic_js__WEBPACK_IMPORTED_MODULE_2__["TurnCommand"](this, this.game);
+          } else {
+            this.turn.selection = {
+              row: row,
+              col: col
+            };
+            this.setState({
+              checked: this.turn.selection
+            });
           }
         } else setChecked(row, col);
       } else setChecked(row, col);

@@ -44,7 +44,7 @@ function Profile (props) {
 let Figure = props => <img className={"figures__checker-img" + (props.vis ? ' figures__checker-img_visible' : '')} 
 								src={props.color + '.png'} alt="ch"/>;
 
-// pureComponent here is that with props.amount == new.amount React still renders el so that this might help
+// pureComponent is here beacuse React still render component even with props.amount == new.amount
 class Figures extends React.PureComponent {
 	render () {
 		return (
@@ -196,7 +196,9 @@ export default class CheckersGame extends React.Component {
 	componentDidMount () {
 		this.game = new Game();
 		let init = new InitCommand(this, this.game);
-		this.executeCommand(init);
+		this.setState(init.execute());
+		this.turn = new TurnCommand(this, this.game);
+		// this.executeCommand(init);
 	}
 
 	handleCheckersClick (e) {
@@ -224,7 +226,13 @@ export default class CheckersGame extends React.Component {
 						this.setState({
 							win: cw
 						})
-					this.turn = new TurnCommand(this, game);
+					this.turn = new TurnCommand(this, this.game);
+				}
+				else {
+					this.turn.selection = {row, col};
+					this.setState({
+						checked: this.turn.selection
+					})
 				}
 			}
 			else

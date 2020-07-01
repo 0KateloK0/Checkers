@@ -9,8 +9,6 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "InitCommand", function() { return InitCommand; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "TurnCommand", function() { return TurnCommand; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "CheckWinCommand", function() { return CheckWinCommand; });
-function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
-
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) _setPrototypeOf(subClass, superClass); }
 
 function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
@@ -25,10 +23,6 @@ function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Re
 
 function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
 
-function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
-
-function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
-
 function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread(); }
 
 function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
@@ -41,7 +35,13 @@ function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) return _arrayLikeToAr
 
 function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
 
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
+
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -49,78 +49,101 @@ function _defineProperties(target, props) { for (var i = 0; i < props.length; i+
 
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
+var Pair = /*#__PURE__*/function () {
+  function Pair(obj) {
+    _classCallCheck(this, Pair);
+
+    if (arguments.length == 1) {
+      switch (_typeof(obj)) {
+        case 'string':
+          if (isNaN(Number(obj))) {
+            if (/^[a-h][1-8]$/i.test(obj)) {
+              this.r = Number(Pair.ABC().indexOf(obj[0]));
+              this.c = Number(obj[1]);
+            } else throw new Error('Incompatible input for pair');
+          } else {
+            obj = Number(obj);
+            this.r = Math.floor(obj / 8);
+            this.c = obj % 8;
+          }
+
+          break;
+
+        case 'number':
+          this.r = Math.floor(obj / 8);
+          this.c = obj % 8;
+          break;
+
+        default:
+          try {
+            var _obj = _objectSpread({}, obj),
+                r = _obj.row,
+                c = _obj.col;
+
+            this.r = Number(r);
+            this.c = Number(c);
+          } catch (err) {
+            throw new Error('Incompatible input for pair');
+          }
+
+      }
+    } else {
+      this.r = Number(arguments[0]);
+      this.c = Number(arguments[1]);
+    }
+  }
+
+  _createClass(Pair, [{
+    key: "toString",
+    value: function toString() {
+      return Pair.ABC()[this.r] + this.c.toString();
+    }
+  }], [{
+    key: "ABC",
+    value: function ABC() {
+      return ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+    }
+  }]);
+
+  return Pair;
+}();
+
 var Game = /*#__PURE__*/function () {
   function Game() {
     _classCallCheck(this, Game);
 
-    var Checker = /*#__PURE__*/function () {
-      function Checker(color, row, col) {
-        var queen = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : false;
+    function Checker(color) {
+      var queen = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+      this.color = color;
+      this.queen = queen;
+    }
 
-        _classCallCheck(this, Checker);
-
-        this.color = color;
-        this.queen = queen;
-        this.changeCoords(row, col);
-      }
-
-      _createClass(Checker, [{
-        key: "changeCoords",
-        value: function changeCoords(row, col) {
-          this.row = row;
-          this.col = col;
-        }
-      }]);
-
-      return Checker;
-    }();
-
-    this.field = [];
-    Object.assign(this.field, {
+    this.field = new Proxy(Object.assign([], {
       getDiagonal: function getDiagonal(y, x, dir) {
         // dir === true means left-right diagonal avd dir === false vice versa
-        var arr = Object.assign([], _defineProperty({}, Symbol.iterator, function () {
-          var current = [].map.call(Object.keys(this), Number).filter(function (a) {
-            return !isNaN(a);
-          }).reduce(function (a, b) {
-            return b < a ? b : a;
-          }); // finds smallest index 
-
-          var self = this;
-          return {
-            current: current,
-            next: function next() {
-              if (self[current] !== undefined) return {
-                value: self[current++],
-                done: false
-              };else return {
-                done: true
-              };
-            }
-          };
-        }));
+        var arr = [];
         y = Number(y);
         x = Number(x); // if it'll pass as string this will cause to empty array as result
 
         if (dir) {
           for (var c = 0; y + c < 8 && x + c < 8; c++) {
-            arr[c] = this[y + c][x + c];
+            arr[c] = new Pair(y + c, x + c);
           }
 
           for (var _c = -1; y + _c >= 0 && x + _c >= 0; _c--) {
-            arr[_c] = this[y + _c][x + _c];
+            arr[_c] = new Pair(y + _c, x + _c);
           }
         } else {
           for (var _c2 = 0; y + _c2 < 8 && x - _c2 >= 0; _c2++) {
-            arr[_c2] = this[y + _c2][x - _c2];
+            arr[_c2] = new Pair(y + _c2, x - _c2);
           }
 
           for (var _c3 = -1; y + _c3 >= 0 && x - _c3 < 8; _c3--) {
-            arr[_c3] = this[y + _c3][x - _c3];
+            arr[_c3] = new Pair(y + _c3, x - _c3);
           }
         }
 
-        return arr; // add iterator method to this array obj
+        return arr;
       },
       flush: function flush() {
         this.splice(0, this.length);
@@ -138,10 +161,24 @@ var Game = /*#__PURE__*/function () {
         this.splice.apply(this, [0, this.length].concat(_toConsumableArray(s.split('').reduce(function (arr, c, i) {
           if (i % 8 === 0) arr.push([]);
           var j = Math.floor(i / 8);
-          if (c == 0) arr[j].push(0);else if (c == 1) arr[j].push(new Checker('white', j, i % 8, false));else if (c == 2) arr[j].push(new Checker('white', j, i % 8, true));else if (c == 3) arr[j].push(new Checker('black', j, i % 8, false));else if (c == 4) arr[j].push(new Checker('black', j, i % 8, true));
+          if (c == 0) arr[j].push(0);else if (c == 1) arr[j].push(new Checker('white', false));else if (c == 2) arr[j].push(new Checker('white', true));else if (c == 3) arr[j].push(new Checker('black', false));else if (c == 4) arr[j].push(new Checker('black', true));
           return arr;
         }, []))));
         return this;
+      }
+    }), {
+      set: function set(target, key, value) {
+        if (key instanceof Pair) {
+          target[key.r][key.c] = value;
+        } else return Reflect.set.apply(Reflect, arguments);
+      },
+      get: function get(target, key) {
+        if (!(key in target)) try {
+          var p = new Pair(key);
+          return target[p.r][p.c];
+        } catch (err) {
+          return Reflect.get(target, key);
+        } else return Reflect.get(target, key);
       }
     }); // this.init();
   }
@@ -161,7 +198,6 @@ var Game = /*#__PURE__*/function () {
     key: "replaceChecker",
     value: function replaceChecker(r, c, row, col) {
       this.field[row][col] = this.field[r][c];
-      this.field[row][col].changeCoords(row, col);
       this.field[r][c] = 0;
     }
   }, {
@@ -171,21 +207,23 @@ var Game = /*#__PURE__*/function () {
     }
   }, {
     key: "checkCheckerTurn",
-    value: function checkCheckerTurn(checker, row, col) {
-      var _checker = _objectSpread({}, checker),
-          r = _checker.row,
-          c = _checker.col,
-          queen = _checker.queen,
-          color = _checker.color; // checks that turn is possible (false - 0) and if so (1) and there is ONE enemy on way return 2 (eating turn)
+    value: function checkCheckerTurn(selection, row, col) {
+      var _selection = _objectSpread({}, selection),
+          r = _selection.row,
+          c = _selection.col,
+          field = this.field,
+          _field$r$c = _objectSpread({}, field[r][c]),
+          color = _field$r$c.color,
+          queen = _field$r$c.queen; // checks that turn is possible (false - 0) and if so (1) and there is ONE enemy on way return 2 (eating turn)
       // this thing assumes that there are no other eating turn
 
 
       if (Math.abs(row - r) === Math.abs(col - c)) {
         // checks if on same diag
-        var d = this.field.getDiagonal(r, c, Math.sign(row - r) === Math.sign(col - c)),
+        var d = field.getDiagonal(r, c, Math.sign(row - r) === Math.sign(col - c)),
             index = row - r; // it's not important if this is row or col comparsion
 
-        if (d[index]) return 0; // checks if there is no other checker on new place
+        if (field[d[index]]) return 0; // checks if there is no other checker on new place
 
         if (!queen) {
           switch (Math.abs(index)) {
@@ -193,7 +231,8 @@ var Game = /*#__PURE__*/function () {
               if (Math.sign(index) > 0 && color === 'black' || Math.sign(index) < 0 && color === 'white') return 1;else return 0;
 
             case 2:
-              return d[index - Math.sign(index)] && d[index - Math.sign(index)].color !== color ? 2 : 0;
+              var f = field[d[index - Math.sign(index)]];
+              return f && f.color !== color ? 2 : 0;
 
             default:
               return 0;
@@ -203,8 +242,10 @@ var Game = /*#__PURE__*/function () {
         var counter = 0; // checks if there is no ally checkers on path and that its not more than one enemy checker on path
 
         for (var k = Math.sign(index); k !== index; k += Math.sign(index - k)) {
-          if (d[k]) {
-            if (d[k].color === color) return 0;else counter++;
+          var t = field[d[k]];
+
+          if (t) {
+            if (t.color === color) return 0;else counter++;
           }
         }
 
@@ -213,11 +254,11 @@ var Game = /*#__PURE__*/function () {
     }
   }, {
     key: "checkTurn",
-    value: function checkTurn(checker, row, col) {
+    value: function checkTurn(selection, row, col) {
       // there is no need to check wheter checker is right color or not. game does not know which client matches which color
       var field = this.field;
 
-      switch (this.checkCheckerTurn(checker, row, col)) {
+      switch (this.checkCheckerTurn(selection, row, col)) {
         case 0:
           return 0;
 
@@ -228,9 +269,15 @@ var Game = /*#__PURE__*/function () {
           // check for any eating turns possible. if so return 0 if not return 1
           // also add trigger: if previous turn had done, this check is unnecessary
           // possible optimisation: look only for diagonals 
+          var _field = this.field,
+              c = _field[new Pair(selection)];
+
           for (var i = 0; i < 8; i++) {
             for (var j = 0; j < 8; j++) {
-              if (field[i][j] != checker && field[i][j].color == checker.color) if (this.checkEatingTurns(field[i][j])) return 0;
+              if (_field[i][j] != c && _field[i][j].color == c.color) if (this.checkEatingTurns({
+                row: i,
+                col: j
+              })) return 0;
             }
           }
 
@@ -239,27 +286,27 @@ var Game = /*#__PURE__*/function () {
     }
   }, {
     key: "checkEatingTurns",
-    value: function checkEatingTurns(checker) {
-      var row = checker.row,
-          col = checker.col;
+    value: function checkEatingTurns(selection) {
+      var row = selection.row,
+          col = selection.col;
 
       for (var i = row - 1; i >= 0; i--) {
         for (var j = col - 1; j >= 0; j--) {
-          if (this.checkCheckerTurn(checker, i, j) === 2) return true;
+          if (this.checkCheckerTurn(selection, i, j) === 2) return true;
         }
 
         for (var _j = col + 1; _j < 8; _j++) {
-          if (this.checkCheckerTurn(checker, i, _j) === 2) return true;
+          if (this.checkCheckerTurn(selection, i, _j) === 2) return true;
         }
       }
 
       for (var _i = row + 1; _i < 8; _i++) {
         for (var _j2 = col - 1; _j2 >= 0; _j2--) {
-          if (this.checkCheckerTurn(checker, _i, _j2) === 2) return true;
+          if (this.checkCheckerTurn(selection, _i, _j2) === 2) return true;
         }
 
         for (var _j3 = col + 1; _j3 < 8; _j3++) {
-          if (this.checkCheckerTurn(checker, _i, _j3) === 2) return true;
+          if (this.checkCheckerTurn(selection, _i, _j3) === 2) return true;
         }
       }
 
@@ -281,11 +328,11 @@ var Game = /*#__PURE__*/function () {
     }
   }, {
     key: "makeTurn",
-    value: function makeTurn(checker, row, col) {
+    value: function makeTurn(selection, row, col) {
       var cont = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : false;
-      var checkRes = this.checkTurn(checker, row, col);
-      var r = checker.row,
-          c = checker.col;
+      var checkRes = this.checkTurn(selection, row, col);
+      var r = selection.row,
+          c = selection.col;
       if (cont && checkRes === 1) return 0;
 
       switch (checkRes) {
@@ -302,6 +349,7 @@ var Game = /*#__PURE__*/function () {
         case 1:
           // replace checker to new pos
           this.replaceChecker(r, c, row, col);
+          var checker = this.field[row][col];
           if (!checker.queen && (checker.color === 'white' && row === 0 || checker.color === 'black' && row === 7)) checker.queen = true;
           break;
       }
@@ -312,7 +360,10 @@ var Game = /*#__PURE__*/function () {
     key: "postProc",
     value: function postProc(checkRes, row, col) {
       // assumes checkRes is not 0
-      if (checkRes == 2 && this.checkEatingTurns(this.field[row][col])) return 3;else {
+      if (checkRes == 2 && this.checkEatingTurns({
+        row: row,
+        col: col
+      })) return 3;else {
         this.changeOrder();
         return checkRes;
       }
@@ -416,7 +467,7 @@ var TurnCommand = /*#__PURE__*/function (_CheckersCommand2) {
       var row = value.row,
           col = value.col;
       if (this.game.field[row][col].color != this.game.order) throw new Error('Incorrect selection');
-      this.checked = this.game.field[row][col];
+      this.checked = value;
     },
     get: function get() {
       return this.checked;
