@@ -135,14 +135,48 @@ function GameStats ({
 	time1, time2, order
 }={}) {
 	return (
-		<div className="gameStats">
+		<div className="game-stats">
 			<Timer time={time2} />
 			<Timer time={time1} />
 		</div>
 		)
 }
 
-export default class CheckersGame extends React.Component {
+// pattern builder:
+// result: field with hints
+// builder: thing that implemepnts field hints functions.
+// this thing will be recreated every time with new turn
+// director: thing that implements sepcific settings. gets builder as input
+// application: always different
+
+/*let functions = {
+	beforeTurn () {
+		// creates hints that explain which turns are possible
+	},
+	afterSelection () {
+
+	},
+	afterContTurn () {
+
+	},
+	afterTurn () {
+		// creates hint that shows which turn had done
+	}
+}
+
+function maxHints (field, turn) {
+	if (turn == undefined) {
+		return functions.beforeTurn().bind(field);
+	}
+	else if (turn.selection != undefined) {
+		return functions.afterSelection().bind(field);
+	}
+	else if (turn.state == 'finished') {
+		return functions.afterTurn().bind(field);
+	}
+}*/
+
+class CheckersGame extends React.Component {
 	constructor (props) {
 		super(props);
 		this.state = {
@@ -152,28 +186,6 @@ export default class CheckersGame extends React.Component {
 		}
 		this.handleCheckersClick = this.handleCheckersClick.bind(this);
 		this.history = [];
-		this.players = [] // temporary
-		// fiction
-		this.player1 = {
-			user: {
-				avatarSrc: 'Artem.jpg',
-				FIO: 'Artem Katelkin',
-				money: 25347,
-				rating: 1987,
-			},
-			timeLeft: 228000,
-			color: 'white'
-		}
-		this.player2 = {
-			user: {
-				avatarSrc: 'Kirill.jpg',
-				FIO: 'Kirill Glushkov',
-				money: 18967,
-				rating: 1999,
-			},
-			timeLeft: 224000,
-			color: 'black'
-		}
 	}
 
 	makeHistoryObject ({
@@ -256,31 +268,72 @@ export default class CheckersGame extends React.Component {
 
 	render () {
 		return (
-			<div className="app">
-				<div className="game">
+			<div className="game">
+				<div className="game-stats-container">
+					<GameStats
+						time1={13}
+						time2={14} 
+						order={this.state.order} />
+				</div>
+				<div className="checkers-UI-container">
+					<CheckersUI
+						activePlayer={'white'}
+						onClick={this.handleCheckersClick}
+						field={this.state.field}
+						checked={this.state.checked} />
+				</div>
+			</div>
+			)
+	}
+}
+
+export default class App extends React.Component {
+	constructor (props) {
+		super(props);
+		// fiction
+		this.player1 = {
+			user: {
+				avatarSrc: 'Artem.jpg',
+				FIO: 'Artem Katelkin',
+				money: 25347,
+				rating: 1987,
+			},
+			timeLeft: 228000,
+			color: 'white'
+		}
+		this.player2 = {
+			user: {
+				avatarSrc: 'Kirill.jpg',
+				FIO: 'Kirill Glushkov',
+				money: 18967,
+				rating: 1999,
+			},
+			timeLeft: 224000,
+			color: 'black'
+		}
+
+		this.players = [];
+	}
+
+	render () {
+		return (
+			<div className="app-container">
+				<div className="app">
 					<div className="player-container player1">
 						<PlayerInfo
 							player={this.player2}
-							field={this.state.field}
-							history={this.history} />
+							field={[[]]}
+							history={[]} />
 					</div>
 					<div className="game-container">
-						<GameStats
-							time1={this.player1.timeLeft}
-							time2={this.player2.timeLeft} 
-							order={this.state.order} />
-						<CheckersUI
-							activePlayer={'white'}
-							onClick={this.handleCheckersClick}
-							field={this.state.field}
-							checked={this.state.checked} />
+						<CheckersGame />
 					</div>
 					<div className="player-container player2">
 						<PlayerInfo
 							player={this.player1}
-							field={this.state.field}
+							field={[[]]}
 							reverse={true}
-							history={this.history} />
+							history={[]} />
 					</div>
 					<div className="chat-container">
 						<Chat />
