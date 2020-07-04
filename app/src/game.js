@@ -179,25 +179,13 @@ function maxHints (field, turn) {
 class CheckersGame extends React.Component {
 	constructor (props) {
 		super(props);
+		this.game = new Game();
+		this.turn = new TurnCommand(this, this.game);
 		this.state = {
-			field: [], order: 'white',
-			checked: undefined,
-			win: false
+			...new InitCommand(this, this.game).execute(),
 		}
 		this.handleCheckersClick = this.handleCheckersClick.bind(this);
 		this.history = [];
-	}
-
-	makeHistoryObject ({
-			selection: {row: r, col: c}, row, col
-		}={}) {
-		return {
-			r, c, row, col,
-			toString () {
-				let ABC = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
-				return `${ABC[r]}${c}-${ABC[row]}${col}`;
-			}
-		}
 	}
 
 	restart () {
@@ -205,65 +193,18 @@ class CheckersGame extends React.Component {
 		this.setState({...state, win: false});
 	}
 
-	componentDidMount () {
-		this.game = new Game();
-		let init = new InitCommand(this, this.game);
-		this.setState(init.execute());
-		this.turn = new TurnCommand(this, this.game);
-		// this.executeCommand(init);
-	}
-
 	handleCheckersClick (e) {
 		let [row, col] = [...e.target.closest('.checkers-cell').getAttribute('pos').split('_').map(Number)];
-		let setChecked = function setChecked (row, col) {
-			try {
-				this.turn.selection = {row, col}
-				this.setState({checked: this.turn.selection});
-			}
-			catch (err) {
-				this.setState({checked: undefined});
-			}
-		}.bind(this);
 
-		if (this.state.checked) {
-			this.buffer = {row, col};
-			let res = this.executeCommand(this.turn);
-			if (res) {
-				let {field, order, state} = res;
-				this.setState({field});
-				if (state === 'finished') {
-					this.setState({ checked: undefined, order });
-					let cw = this.game.checkWin();
-					if (cw)
-						this.setState({
-							win: cw
-						})
-					this.turn = new TurnCommand(this, this.game);
-				}
-				else {
-					this.turn.selection = {row, col};
-					this.setState({
-						checked: this.turn.selection
-					})
-				}
-			}
-			else
-				setChecked(row, col)
+		this.turn.addCell(row, col);
+		if (this.turn.state == 'complete') {
+			this.executeCommand(this.turn);
+			this.turn = new TurnCommand(this, this.game);
 		}
-		else
-			setChecked(row, col);
 	}
 
 	executeCommand (command) {
-		let res = command.execute();
-		if (res.state === 'finished') {
-			this.history.push(this.makeHistoryObject(command));
-			/*console.log(JSON.stringify(command));
-			socket.emit('turn', {
-				data: JSON.stringify(command)
-			})*/
-		}
-		return res;
+		command.execute();
 	}
 
 	render () {

@@ -42,14 +42,15 @@ class Pair {
 	static ABC () { return ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'] }
 }
 
+
 class Game {
-	constructor () {
+	constructor (field, order='white') {
 		function Checker (color, queen=false) {
 			this.color = color;
 			this.queen = queen;
 		}
 
-		this.field = new Proxy(Object.assign([], {
+		this.field = Object.assign([], {
 			getDiagonal (y, x, dir) {
 				// dir === true means left-right diagonal avd dir === false vice versa
 				let arr = [];
@@ -73,7 +74,7 @@ class Game {
 				return this;
 			},
 			toString () {
-				return this.reduce((str, arr) => arr.reduce((s, el) => {
+				return this.reduce((str, arr) => str + arr.reduce((s, el) => {
 						if (!el) return s + '0';
 						else if ((el.color === 'white') && !el.queen) return s + '1';
 						else if ((el.color === 'white') && el.queen) return s + '2';
@@ -94,28 +95,14 @@ class Game {
 					return arr;
 				}, []));
 				return this;
-			}
-		}), {
-			set (target, key, value) {
-				if (key instanceof Pair) {
-					target[key.r][key.c] = value;
-				}
-				else
-					return Reflect.set(...arguments);
 			},
-			get (target, key) {
-				if (!(key in target))
-					try {
-						let p = new Pair(key);
-						return target[p.r][p.c];
-					}
-					catch (err) {
-						return Reflect.get(target, key);
-					}
-				else return Reflect.get(target, key);
+			get (pair) {
+				return this[pair.r][pair.c];
 			}
 		});
-		// this.init();
+		if (field)
+			this.field.fromString( field.toString() );
+		this.order = order;
 	}
 
 	init () {
@@ -124,21 +111,8 @@ class Game {
 		this.order = 'white';
 	}
 
-	changeOrder () {
-		this.order = this.order == 'white' ? 'black' : 'white';
-	}
-
-	replaceChecker (r, c, row, col) {
-		this.field[row][col] = this.field[r][c];
-		this.field[r][c] = 0;
-	}
-
-	deleteChecker (row, col) {
-		this.field[row][col] = 0;
-	}
-
-	checkCheckerTurn (selection, row, col) {
-		let {row: r, col: c} = {...selection},
+	checkCheckerTurn (selection, {r: row, c: col}) {
+		let {r, c} = {...selection},
 			field = this.field,
 			{color, queen} = {...field[r][c]};
 		// checks that turn is possible (false - 0) and if so (1) and there is ONE enemy on way return 2 (eating turn)
@@ -176,85 +150,118 @@ class Game {
 		else return 0;
 	}
 
-	checkTurn (selection, row, col) {
-		// there is no need to check wheter checker is right color or not. game does not know which client matches which color
-		let field = this.field;
-		switch (this.checkCheckerTurn(selection, row, col)) {
-			case 0: return 0;
-			case 2: return 2;
-			case 1:
-				// check for any eating turns possible. if so return 0 if not return 1
-				// also add trigger: if previous turn had done, this check is unnecessary
-				// possible optimisation: look only for diagonals 
-				let field = this.field, c = field[new Pair(selection)];
-				for (let i = 0; i < 8; i++)
-					for (let j = 0; j < 8; j++)
-						if ((field[i][j] != c) && (field[i][j].color == c.color))
-							if (this.checkEatingTurns({row: i, col: j}))
-								return 0;
+	checkSelectionInContext (sel, field, turn) {
+		let c = turn.cells,
+			res = 0,
+			game = new Game(field, this.order);
+		if (c.length == 0) {
+			let CET = game.checkEatingTurns(sel);
+			if (!turn.selection) {
+				// check whether you can select this or not
+				if (!CET) {
+					let c = field.get(sel);
+					for (let i = 0; i < 8; i++)
+						for (let j = 0; j < 8; j++)
+							if ((field[i][j] != c) && (field[i][j].color == c.color))
+								if (game.checkEatingTurns(new Pair(i, j)))
+									return 0;
+					return 1;
+				}
 				return 1;
+			}
+			else {
+				// check if you can make a move (it's eating or there is no eating turns)
+				let CCT = game.checkCheckerTurn(turn.selection, sel);
+				if ((CCT == 1) && CET) return 0;
+				res = 3;
+			}
 		}
+		else {
+			if (!(c.last.status & 4)) return 0;
+			let CCT = game.checkCheckerTurn(c.last, sel);
+			if (CCT == 2)
+				res = 3;
+			else return 0;
+		}
+
+		let checkForCont = () => {
+			let gameCopy = new Game(field, this.order);
+			if (c.last) {
+				gameCopy.makeTurnStep(c.last, sel, 3);
+			}
+			else {
+				gameCopy.makeTurnStep(turn.selection, sel, 3);
+			}
+			return gameCopy.checkEatingTurns(sel);
+		}
+
+		if ((res & 2) && checkForCont()) {
+			return res | 4;
+		}
+		else {
+			res = res | 16;
+			let checker = field.get(sel);
+			if ((!checker.queen) && (((checker.color === 'white') && (row === 0))
+				|| ((checker.color === 'black') && (row === 7)))) return res | 8;
+			return res;
+		}
+	}
+
+	checkFullTurn (turn) {
+		// lets return 0 if turn is impossible, otherwise return sequence, compatible with makeTurn
+		let field = this.field.slice();
+		let sel = this.checkSelectionInContext(turn.selection, field, {cells: []});
+		if (!sel) return 0;
+		return turn.cells.reduce((a, b, i) => {
+			if (a == 0) return 0;
+			let r = this.checkSelectionInContext(b, field, { selection: a[0], cells: a.slice(1) });
+			if (r == 0) return 0;
+			a.push(Object.assign(b, { state: r }))
+			this.makeTurnStep.call({field}, a.cells[a.cells.length - 1], b, r);
+		}, [turn.selection]);
+	}
+
+	makeTurnStep ({r, c}, {r: row, c: col}, s) {
+		if (s == 0) return false;
+		if (s & 1) {
+			this.field[row][col] = this.field[r][c];
+			this.field[r][c] = 0;
+		}
+		if (s & 2) {
+			for (let k = 1; row + k * Math.sign(r - row) !== r; k++) // it's not important if it's row or col comparsion
+				this.field[r + k * Math.sign(row - r)][c + k * Math.sign(col - c)] = 0;
+		}
+		if (s & 8) {
+			this.field[row][col].queen = true;
+		}
+		if (s & 16) {
+			this.order = this.order == 'white' ? 'black' : 'white';
+		}
+		return true;
+	}
+
+	makeFullTurn (turn) {
+		turn.cells.reduce((a, b) => {
+			this.makeTurnStep(a, b, b.state);
+			return b;
+		}, turn.selection);
 	}
 
 	checkEatingTurns (selection) {
-		let {row, col} = selection;
-		for (let i = row - 1; i >= 0; i--) {
-			for (let j = col - 1; j >= 0; j--)
-				if (this.checkCheckerTurn(selection, i, j) === 2) return true;
-			for (let j = col + 1; j < 8; j++)
-				if (this.checkCheckerTurn(selection, i, j) === 2) return true;
+		let {r, c} = selection;
+		for (let i = r - 1; i >= 0; i--) {
+			for (let j = c - 1; j >= 0; j--)
+				if (this.checkCheckerTurn(selection, new Pair(i, j)) === 2) return true;
+			for (let j = c + 1; j < 8; j++)
+				if (this.checkCheckerTurn(selection, new Pair(i, j)) === 2) return true;
 		}
-		for (let i = row + 1; i < 8; i++) {
-			for (let j = col - 1; j >= 0; j--)
-				if (this.checkCheckerTurn(selection, i, j) === 2) return true;
-			for (let j = col + 1; j < 8; j++)
-				if (this.checkCheckerTurn(selection, i, j) === 2) return true;
+		for (let i = r + 1; i < 8; i++) {
+			for (let j = c - 1; j >= 0; j--)
+				if (this.checkCheckerTurn(selection, new Pair(i, j)) === 2) return true;
+			for (let j = c + 1; j < 8; j++)
+				if (this.checkCheckerTurn(selection, new Pair(i, j)) === 2) return true;
 		}
 		return false;
-	}
-
-	checkWin () {
-		let c1 = 0, c2 = 0;
-		for (let i = 0; i < 8; i++) {
-			for (let j = 0; j < 8; j++) {
-				if (this.field[i][j].color === 'white') c1++;
-				else if (this.field[i][j].color === 'black') c2++;
-			}
-		}
-		if (c1 === 0) return 'black';
-		else if (c2 === 0) return 'white';
-		else return false;
-	}
-
-	makeTurn (selection, row, col, cont=false) {
-		let checkRes = this.checkTurn(selection, row, col);
-		let {row: r, col: c} = selection;
-		if (cont && (checkRes === 1)) return 0;
-		switch (checkRes) {
-			case 0: return 0;
-			case 2:
-				// remove all enemy checkers from path
-				for (let k = 1; row + k * Math.sign(r - row) !== r; k++) // it's not important if it's row or col comparsion
-					this.deleteChecker(r + k * Math.sign(row - r), c + k * Math.sign(col - c));
-			case 1:
-				// replace checker to new pos
-				this.replaceChecker(r, c, row, col);
-				let checker = this.field[row][col];
-				if ((!checker.queen) && (((checker.color === 'white') && (row === 0))
-					|| ((checker.color === 'black') && (row === 7)))) checker.queen = true;
-				break;
-		}
-		return this.postProc(checkRes, row, col);
-	}
-
-	postProc (checkRes, row, col) {
-		// assumes checkRes is not 0
-		if ((checkRes == 2) && this.checkEatingTurns({row, col}))
-			return 3;
-		else {
-			this.changeOrder();
-			return checkRes;
-		}
 	}
 }
 
@@ -274,7 +281,6 @@ class InitCommand extends CheckersCommand {
 	execute () {
 		this.game.init();
 		return {
-			state: 'fuck up',
 			field: this.game.field,
 			order: this.game.order
 		}
@@ -284,40 +290,33 @@ class InitCommand extends CheckersCommand {
 class TurnCommand extends CheckersCommand {
 	constructor () {
 		super(...arguments);
-		this.history = [];
+		this.selection = undefined;
+		this.cells = [];
+		Object.defineProperty(this.cells, 'last', {
+			get () { return this[this.length - 1] }
+		})
 	}
 
-	set selection (value) {
-		let {row, col} = value;
-		if (this.game.field[row][col].color != this.game.order) throw new Error('Incorrect selection');
-		this.checked = value;
+	addCell (row, col) {
+		let p = new Pair(row, col),
+			check = this.game.checkSelectionInContext(p, this.client.state.field, this);
+		if (!check) return 0;
+		if (this.selection)
+			this.cells.push(Object.assign(p, { state: check }));
+		else
+			this.selection = p;
+		if (check & 16)
+			this.state = 'complete';
+		console.log(this);
 	}
 
-	get selection () { return this.checked }
+	popCell () {
+		this.cells.pop();
+	}
 
 	execute () {
-		if (this.state === 'finished') throw new Error('This turn has already been finished');
-		let {row, col} = this.client.buffer;
-		this.saveBackup();
-		// since client don't change command object, it's state saves from previous turn, so i can do this
-		let res = this.game.makeTurn(this.selection, row, col, this.state === 'unfinished');
-		if (res === 0) {
-			this.state = 'rejected';
-			return false;
-		}
-		else {
-			if (res === 3) this.state = 'unfinished';
-			else {
-				this.state = 'finished';
-				this.row = row;
-				this.col = col;
-			}
-			return {
-				field: this.game.field,
-				order: this.game.order,
-				state: this.state
-			}
-		}
+		this.game.makeFullTurn(this);
+		this.state = 'finished';
 	}
 }
 

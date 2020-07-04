@@ -1,4 +1,4 @@
-.app {
+.app-container {
 	display: flex;
 	justify-content: space-around;
 	-ms-align-items: center;
@@ -6,7 +6,7 @@
 	padding: 30px 50px;
 }
 
-.game {
+.app {
 	min-width: 500px;
 	width: 80%;
 	max-width: 800px;
@@ -103,7 +103,7 @@
 	justify-content: space-around;
 }
 
-.gameStats {
+.game-stats {
 	height: 30px;
 	display: -webkit-flex;
 	display: -moz-flex;
