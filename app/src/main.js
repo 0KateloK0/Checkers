@@ -1,5 +1,5 @@
 import React from 'react';
-import {InitCommand} from './gameLogic.js';
+import {} from './gameLogic.js';
 import {Checkers} from './checkers.js';
 import './main.css'
 
@@ -21,7 +21,7 @@ class CheckersRoom extends React.PureComponent {
 export default class App extends React.Component {
 	render () {
 		let games = [
-			new InitCommand().execute().field
+			// new InitCommand().execute().field
 		]
 		return (
 			<div className="main">

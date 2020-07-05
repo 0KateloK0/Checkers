@@ -1,6 +1,6 @@
 import React from 'react';
 import './game.css';
-import {Game, InitCommand, TurnCommand, CheckWinCommand} from './gameLogic.js';
+import {Game, TurnCommand, TurnBuilder} from './gameLogic.js';
 import {Checkers, CheckersUI} from './checkers';
 /*import io from 'socket.io-client';
 
@@ -176,35 +176,56 @@ function maxHints (field, turn) {
 	}
 }*/
 
+let HintsTurnBuilder = () => {
+
+}
+
 class CheckersGame extends React.Component {
 	constructor (props) {
 		super(props);
 		this.game = new Game();
-		this.turn = new TurnCommand(this, this.game);
+		let turn = new TurnCommand(this, this.game);
+		let tb = new TurnBuilder(turn, this.game.makeShot());
 		this.state = {
-			...new InitCommand(this, this.game).execute(),
+			game: this.game,
+			tb
 		}
 		this.handleCheckersClick = this.handleCheckersClick.bind(this);
-		this.history = [];
 	}
 
-	restart () {
-		let state = this.executeCommand(this.init);
-		this.setState({...state, win: false});
-	}
+	/*restart () {
+		let game = new Game();
+		this.setState({
+			game,
+			turn: new TurnCommand(this, game)
+		});
+	}*/
 
 	handleCheckersClick (e) {
 		let [row, col] = [...e.target.closest('.checkers-cell').getAttribute('pos').split('_').map(Number)];
 
-		this.turn.addCell(row, col);
-		if (this.turn.state == 'complete') {
-			this.executeCommand(this.turn);
-			this.turn = new TurnCommand(this, this.game);
+		let r = this.state.tb.addCell(row, col);
+		if (r) {
+			this.setState(state => ({
+				game: state.tb.game,
+				tb: state.tb
+			}));
+		}
+		if (this.state.tb.turn.state == 'complete') {
+			let t = this.state.tb.getTurn();
+			this.executeCommand(t);
+			let turn = new TurnCommand(this, this.game);
+			this.setState({
+				tb: new TurnBuilder(turn, this.game.makeShot()) // temporary, with server this would be undefined
+			})
 		}
 	}
 
 	executeCommand (command) {
-		command.execute();
+		if ( command.execute() ) {
+			this.game.history.push(command);
+			// send turn to server
+		}
 	}
 
 	render () {
@@ -214,14 +235,13 @@ class CheckersGame extends React.Component {
 					<GameStats
 						time1={13}
 						time2={14} 
-						order={this.state.order} />
+						order={this.state.game.order} />
 				</div>
 				<div className="checkers-UI-container">
 					<CheckersUI
 						activePlayer={'white'}
 						onClick={this.handleCheckersClick}
-						field={this.state.field}
-						checked={this.state.checked} />
+						field={this.state.game.field} />
 				</div>
 			</div>
 			)

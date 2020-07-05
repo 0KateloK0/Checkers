@@ -42,9 +42,8 @@ class Pair {
 	static ABC () { return ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'] }
 }
 
-
 class Game {
-	constructor (field, order='white') {
+	constructor (obj={}) {
 		function Checker (color, queen=false) {
 			this.color = color;
 			this.queen = queen;
@@ -100,15 +99,67 @@ class Game {
 				return this[pair.r][pair.c];
 			}
 		});
-		if (field)
-			this.field.fromString( field.toString() );
-		this.order = order;
+		this.init(obj.field, obj.order);
+
+		/*this.turn = {
+			cells: [],
+			selection: undefined,
+			state: 'incomplete',
+			cache: [],
+			addCell (row, col) {
+				let p = new Pair(row, col),
+					check = this.game.checkSelectionInContext(p, this.game.field, this);
+				if (!check) {
+					if (this.selection) {
+						if (!this.cells.last) {
+							this.selection = undefined;
+							return this.addCell(...arguments);
+						}
+						return 0;
+					}
+					return 0;
+				}
+				if (this.selection) {
+					let l = this.cells.push(Object.assign(p, { state: check }));
+					if (l >= 2)
+						this.game.makeTurnStep(this.cells.last, );
+				}
+				else
+					this.selection = p;
+				if (check & 16)
+					this.state = 'complete';
+				return check;
+			},
+			removeCell () {
+				this.cells.pop();
+
+			},
+			makeShot () {
+				return this.selection + '-' + this.cells.join('-');
+			},
+			fromShot (shot) {
+				[this.selection, ...this.cells] = shot.split('-').map(a => new Pair(a));
+			}
+		}*/
 	}
 
-	init () {
-		this.field.fromString('03030303' + '30303030' + '03030303' + '00000000' + '00000000' +
-			'10101010' + '01010101' + '10101010');
-		this.order = 'white';
+	makeShot () {
+		return {
+			field: this.field.toString(),
+			order: this.order
+		}
+	}
+
+	fromShot (shot) {
+		this.field.fromString(shot.field);
+		this.order = shot.order;
+	}
+
+	init (field, order='white') {
+		this.field.fromString(field ? field.toString() : 
+			'03030303' + '30303030' + '03030303' + '00000000' + '00000000' +
+			'10101010' + '01010101' + '10101010' );
+		this.order = order;
 	}
 
 	checkCheckerTurn (selection, {r: row, c: col}) {
@@ -120,7 +171,7 @@ class Game {
 		if (Math.abs(row - r) === Math.abs(col - c)) { // checks if on same diag
 			let d = field.getDiagonal(r, c, Math.sign(row - r) === Math.sign(col - c)),
 				index = row - r; // it's not important if this is row or col comparsion
-			if (field[d[index]]) return 0; // checks if there is no other checker on new place
+			if (field.get(d[index])) return 0; // checks if there is no other checker on new place
 			if (!queen) {
 				switch (Math.abs(index)) {
 					case 1:
@@ -129,7 +180,7 @@ class Game {
 							return 1;
 						else return 0;
 					case 2:
-						let f = field[d[index - Math.sign(index)]];
+						let f = field.get(d[index - Math.sign(index)]);
 						return f && (f.color !== color) ? 2 : 0;
 					default: return 0;
 				}
@@ -137,7 +188,7 @@ class Game {
 			let counter = 0;
 			// checks if there is no ally checkers on path and that its not more than one enemy checker on path
 			for (let k = Math.sign(index); k !== index; k += Math.sign(index - k)) {
-				let t = field[d[k]];
+				let t = field.get(d[k]);
 				if (t) {
 					if (t.color === color) return 0;
 					else counter++;
@@ -153,11 +204,11 @@ class Game {
 	checkSelectionInContext (sel, field, turn) {
 		let c = turn.cells,
 			res = 0,
-			game = new Game(field, this.order);
+			game = new Game({field, order: this.order});
 		if (c.length == 0) {
-			let CET = game.checkEatingTurns(sel);
 			if (!turn.selection) {
-				// check whether you can select this or not
+				if (field.get(sel).color != game.order) return 0;
+				let CET = game.checkEatingTurns(sel);
 				if (!CET) {
 					let c = field.get(sel);
 					for (let i = 0; i < 8; i++)
@@ -170,14 +221,14 @@ class Game {
 				return 1;
 			}
 			else {
-				// check if you can make a move (it's eating or there is no eating turns)
+				let CET = game.checkEatingTurns(turn.selection);
 				let CCT = game.checkCheckerTurn(turn.selection, sel);
-				if ((CCT == 1) && CET) return 0;
-				res = 3;
+				if ((CCT == 0) || ((CCT == 1) && CET)) return 0;
+				res = CCT == 2 ? 3 : 1;
 			}
 		}
 		else {
-			if (!(c.last.status & 4)) return 0;
+			if (!(c.last.state & 4)) return 0;
 			let CCT = game.checkCheckerTurn(c.last, sel);
 			if (CCT == 2)
 				res = 3;
@@ -185,12 +236,12 @@ class Game {
 		}
 
 		let checkForCont = () => {
-			let gameCopy = new Game(field, this.order);
+			let gameCopy = new Game({field, order: this.order});
 			if (c.last) {
-				gameCopy.makeTurnStep(c.last, sel, 3);
+				gameCopy.makeTurnStep(c.last, sel, 7);
 			}
 			else {
-				gameCopy.makeTurnStep(turn.selection, sel, 3);
+				gameCopy.makeTurnStep(turn.selection, sel, 7);
 			}
 			return gameCopy.checkEatingTurns(sel);
 		}
@@ -200,9 +251,9 @@ class Game {
 		}
 		else {
 			res = res | 16;
-			let checker = field.get(sel);
-			if ((!checker.queen) && (((checker.color === 'white') && (row === 0))
-				|| ((checker.color === 'black') && (row === 7)))) return res | 8;
+			let checker = field.get(c.last ? c.last : turn.selection);
+			if ((!checker.queen) && (((checker.color === 'white') && (sel.r === 0))
+				|| ((checker.color === 'black') && (sel.r === 7)))) return res | 8;
 			return res;
 		}
 	}
@@ -265,68 +316,93 @@ class Game {
 	}
 }
 
-// just because i want to isolate whole game from UI part. After creation of server client and game properties will be set properly
-class CheckersCommand {
-	constructor (client, game) {
-		this.client = client;
-		this.game = game;
-	}
-	saveBackup () {
-		this.backup = this.game.field;
-	}
-}
+// view stores TurnBuilder and real game in state
+// view draws turnBuilder game
+// and hints apply to turnBuilder to get turn
+// OR maybe i can make this thing to be hints engine
+// cuz game may just execute whole turnCommand from other place
+// BUT engine must be separated from this thing
+// cuz engine can be turned off but turnBuilder must be there always!
 
-// init command also must be here
-class InitCommand extends CheckersCommand {
-	execute () {
-		this.game.init();
-		return {
-			field: this.game.field,
-			order: this.game.order
-		}
-	}
-}
-
-class TurnCommand extends CheckersCommand {
-	constructor () {
-		super(...arguments);
-		this.selection = undefined;
-		this.cells = [];
-		Object.defineProperty(this.cells, 'last', {
-			get () { return this[this.length - 1] }
-		})
+class TurnBuilder {
+	constructor (turn, gameShot) {
+		this.turn = turn;
+		this.game = new Game();
+		this.game.fromShot(gameShot);
+		this.history = [];
 	}
 
 	addCell (row, col) {
 		let p = new Pair(row, col),
-			check = this.game.checkSelectionInContext(p, this.client.state.field, this);
-		if (!check) return 0;
-		if (this.selection)
-			this.cells.push(Object.assign(p, { state: check }));
+			check = this.game.checkSelectionInContext(p, this.game.field, this.turn),
+			t = this.turn;
+
+		if (!check) {
+			if (t.selection) {
+				if (!t.cells.last) {
+					t.selection = undefined;
+					return this.addCell(...arguments);
+				}
+				return 0;
+			}
+			return 0;
+		}
+
+		if (t.selection) {
+			this.history.push(this.game.field.toString());
+			if (t.cells.length >= 1)
+				this.game.makeTurnStep(t.cells.last, p, check);
+			else
+				this.game.makeTurnStep(t.selection, p, check);
+			t.cells.push(Object.assign(p, { state: check }));
+		}
 		else
-			this.selection = p;
+			t.selection = p;
+
 		if (check & 16)
-			this.state = 'complete';
-		console.log(this);
+			t.state = 'complete';
+
+		return check;
 	}
 
 	popCell () {
+		this.game.field.fromString(this.history[this.history.length - 1]);
+		this.history.pop();
 		this.cells.pop();
+	}
+
+	getTurn () {
+		let t = new TurnCommand(this.turn.client, this.turn.game);
+		t.cells = this.turn.cells;
+		t.selection = this.turn.selection;
+		t.history = this.history.slice();
+		return t;
+	}
+}
+
+class TurnCommand {
+	constructor (client, game) {
+		this.client = client;
+		this.game = game;
+		this.selection = undefined;
+		this.cells = [];
+		Object.defineProperty(this.cells, 'last', {
+			get () { return this[this.length - 1] }
+		});
+		this.history = [];
 	}
 
 	execute () {
 		this.game.makeFullTurn(this);
 		this.state = 'finished';
+		this.client.setState({
+			game: this.game
+		})
+	}
+
+	undo () {
+
 	}
 }
 
-class CheckWinCommand extends CheckersCommand {
-	execute () {
-		return {
-			value: this.game.checkWin(),
-			state: 'service'
-		}
-	}
-}
-
-export {Game, InitCommand, TurnCommand, CheckWinCommand}
+export {Game, TurnCommand, TurnBuilder}
