@@ -3,6 +3,7 @@
 <head>
 	<meta charset="UTF-8">
 	<title>{{title}}</title>
+	<link rel="shortcut icon" type="image/x-icon" href="favicon.ico">
 	<style type="text/css">
 		@font-face {
 			font-family: Montserrat;
@@ -22,7 +23,7 @@
 	<!-- temporary -->
 	<div class="nav">
 		<div class="logo">
-			
+			<img src="favicon.ico" class="logo-img">
 		</div>
 		<div class="user">
 			{% if current_user.is_anonymous %}
@@ -33,6 +34,9 @@
 		</div>
 	</div>
 	{% block react %} {% endblock %}
+	<div class="footer">
+		<span class="footer-span">Copyright &#169; katelok studios</span>
+	</div>
 	<script type="text/javascript" src="bundle.js"></script>
 </body>
 </html>

@@ -16,7 +16,7 @@
 	grid-template-rows: 1fr 0.5fr;
 	grid-template-areas: "player1 game player2"
 						 "chat chat list";
-	grid-column-gap: 30px;
+	grid-gap: 30px 30px;
 }
 
 .player1 {
@@ -33,10 +33,16 @@
 
 .chat-container {
 	grid-area: chat;
+	background: #F0F0FA;
+	border: 1px solid silver;
+	border-radius: 10px;
 }
 
 .players-list-container {
 	grid-area: list;
+	background: #F0F0FA;
+	border: 1px solid silver;
+	border-radius: 10px;
 }
 
 .avatar-img {
@@ -66,6 +72,7 @@
 
 .FIO {
 	font-family: 'Open-sans';
+	font-style: bold;
 }
 
 .player-container {
@@ -82,6 +89,32 @@
 	-ms-align-items: center;
 	align-items: center;
 	justify-content: space-around;
+}
+
+.avatar-container {
+	padding: 3px;
+}
+
+.FIO-container {
+	margin: 3px;
+}
+
+.money-container, .rating-container {
+	display: -webkit-flex;
+	display: -moz-flex;
+	display: -ms-flex;
+	display: -o-flex;
+	display: flex;
+	-ms-align-items: center;
+	align-items: center;
+	justify-content: space-between;
+	margin: 3px;
+}
+
+.money-img, .rating-img {
+	display: inline-block;
+	width: 20px;
+	margin: 0 3px;
 }
 
 .info {
@@ -167,4 +200,28 @@
 .history__list-el-span {
 	height: 12px;
 	line-height: 12px;
+}
+
+.message {
+	min-height: 40px;
+}
+
+.message-author-av-container {
+	padding: 3px;
+	display: inline-block;
+	float: left;
+}
+
+.message-body-container {
+	padding: 3px;
+	float: right;
+}
+
+.message-body {
+	margin: 0;
+}
+
+.message-author-av {
+	width: 30px;
+	border-radius: 100%;
 }

@@ -22,10 +22,18 @@ body {
 	height: 50px;
 	border-bottom: 2px solid silver;
 	background: #F0F0FA;
+	padding: 5px;
+	box-sizing: border-box;
 }
 
 .logo {
 	display: inline-block;
+	height: 100%;
+}
+
+.logo-img {
+	display: block;
+	height: 100%;
 }
 
 .user {
@@ -44,4 +52,21 @@ body {
 .user__log-btn:hover {
 	color: #A02010;
 	cursor: pointer;
+}
+
+.footer {
+	height: 50px;
+	background: silver;
+	display: -webkit-flex;
+	display: -moz-flex;
+	display: -ms-flex;
+	display: -o-flex;
+	display: flex;
+	-ms-align-items: center;
+	align-items: center;
+	justify-content: space-around;
+}
+
+.footer-span {
+	color: white;
 }

@@ -1,7 +1,7 @@
 import React from 'react';
 import './game.css';
 import {Game, TurnCommand, TurnBuilder} from './gameLogic.js';
-import {Checkers, CheckersUI} from './checkers';
+import {Checkers, CheckersUI, makeHintsEngine} from './checkers';
 /*import io from 'socket.io-client';
 
 let promisify = f => function (...args) {
@@ -14,6 +14,9 @@ let promisify = f => function (...args) {
 	})
 }
 */
+
+let Fio = props => <span className="FIO">{props.FIO}</span>
+
 function Timer (props) {
 	let t = Math.floor(props.time / 1000);
 	return (
@@ -29,12 +32,14 @@ function Profile (props) {
 				<img className="avatar-img" src={avatarSrc} alt="bl"/>
 			</div>
 			<div className="FIO-container">
-				<span className="FIO">{FIO}</span>
+				<Fio FIO={FIO} />
 			</div>
 			<div className="rating-container">
+				<img src="rating.png" alt="" className="rating-img"/>
 				<span className="rating">{rating}</span>
 			</div>
 			<div className="money-container">
+				<img src="chip.png" alt="" className="money-img"/>
 				<span className="money">{money}</span>
 			</div>
 		</div>
@@ -101,7 +106,7 @@ class Player extends React.PureComponent {
 		}, ...rest} = this.props;
 		return (
 			<li {...rest}>
-				<span className="player-list__info-FIO">{FIO}</span>
+				<Fio FIO={FIO} />
 			</li>
 			)
 	}
@@ -121,11 +126,47 @@ class PlayersList extends React.PureComponent {
 	}
 }
 
-class Chat extends React.Component {
+class Message extends React.PureComponent {
+	render () {
+		return (
+			<div className="message">
+				<div className="message-author-av-container">
+					<img src={this.props.author.src} alt="" className="message-author-av"/>
+				</div>
+				<div className="message-body-container">
+					<div className="author-name-container">
+						<Fio FIO={this.props.author.name} />
+					</div>
+					<p className="message-body">
+						{this.props.body}
+					</p>
+				</div>
+			</div>
+			)
+	}
+}
+
+class Chat extends React.PureComponent {
 	render () {
 		return (
 			<div className="chat">
-
+				<div className="messages-container">
+					<div className="messages">
+						{
+							this.props.messages.map(a => 
+								<div className="message-container" key={a.id}>
+									<Message body={a.body} author={a.author}/>
+								</div>
+							)
+						}
+					</div>
+				</div>
+				<div className="messages-form-container">
+					<div className="messages-form">
+						<input type="text"/>
+						<input type="submit"/>
+					</div>
+				</div>
 			</div>
 			)
 	}
@@ -142,44 +183,6 @@ function GameStats ({
 		)
 }
 
-// pattern builder:
-// result: field with hints
-// builder: thing that implemepnts field hints functions.
-// this thing will be recreated every time with new turn
-// director: thing that implements sepcific settings. gets builder as input
-// application: always different
-
-/*let functions = {
-	beforeTurn () {
-		// creates hints that explain which turns are possible
-	},
-	afterSelection () {
-
-	},
-	afterContTurn () {
-
-	},
-	afterTurn () {
-		// creates hint that shows which turn had done
-	}
-}
-
-function maxHints (field, turn) {
-	if (turn == undefined) {
-		return functions.beforeTurn().bind(field);
-	}
-	else if (turn.selection != undefined) {
-		return functions.afterSelection().bind(field);
-	}
-	else if (turn.state == 'finished') {
-		return functions.afterTurn().bind(field);
-	}
-}*/
-
-let HintsTurnBuilder = () => {
-
-}
-
 class CheckersGame extends React.Component {
 	constructor (props) {
 		super(props);
@@ -191,6 +194,7 @@ class CheckersGame extends React.Component {
 			tb
 		}
 		this.handleCheckersClick = this.handleCheckersClick.bind(this);
+		this.engine = makeHintsEngine(1 | 2 | 4);
 	}
 
 	/*restart () {
@@ -216,7 +220,7 @@ class CheckersGame extends React.Component {
 			this.executeCommand(t);
 			let turn = new TurnCommand(this, this.game);
 			this.setState({
-				tb: new TurnBuilder(turn, this.game.makeShot()) // temporary, with server this would be undefined
+				tb: new TurnBuilder(turn, this.game.makeShot())
 			})
 		}
 	}
@@ -241,7 +245,7 @@ class CheckersGame extends React.Component {
 					<CheckersUI
 						activePlayer={'white'}
 						onClick={this.handleCheckersClick}
-						field={this.state.game.field} />
+						field={this.engine(this.state.tb)} />
 				</div>
 			</div>
 			)
@@ -297,7 +301,14 @@ export default class App extends React.Component {
 							history={[]} />
 					</div>
 					<div className="chat-container">
-						<Chat />
+						<Chat messages={[{
+							author: {
+								name: 'Artem Katelkin',
+								src: 'Artem.jpg'
+							},
+							body: 'Privet!',
+							id: 1
+						}]}/>
 					</div>
 					<div className="players-list-container">
 						<PlayersList players={this.players}/>
