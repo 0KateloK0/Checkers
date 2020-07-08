@@ -100,47 +100,6 @@ class Game {
 			}
 		});
 		this.init(obj.field, obj.order);
-
-		/*this.turn = {
-			cells: [],
-			selection: undefined,
-			state: 'incomplete',
-			cache: [],
-			addCell (row, col) {
-				let p = new Pair(row, col),
-					check = this.game.checkSelectionInContext(p, this.game.field, this);
-				if (!check) {
-					if (this.selection) {
-						if (!this.cells.last) {
-							this.selection = undefined;
-							return this.addCell(...arguments);
-						}
-						return 0;
-					}
-					return 0;
-				}
-				if (this.selection) {
-					let l = this.cells.push(Object.assign(p, { state: check }));
-					if (l >= 2)
-						this.game.makeTurnStep(this.cells.last, );
-				}
-				else
-					this.selection = p;
-				if (check & 16)
-					this.state = 'complete';
-				return check;
-			},
-			removeCell () {
-				this.cells.pop();
-
-			},
-			makeShot () {
-				return this.selection + '-' + this.cells.join('-');
-			},
-			fromShot (shot) {
-				[this.selection, ...this.cells] = shot.split('-').map(a => new Pair(a));
-			}
-		}*/
 	}
 
 	makeShot () {
@@ -208,20 +167,21 @@ class Game {
 		if (c.length == 0) {
 			if (!turn.selection) {
 				if (field.get(sel).color != game.order) return 0;
-				let CET = game.checkEatingTurns(sel);
-				if (!CET) {
+				let CET = game.checkTurns(sel);
+				if (CET == 0) return 0;
+				if (CET == 1) {
 					let c = field.get(sel);
 					for (let i = 0; i < 8; i++)
 						for (let j = 0; j < 8; j++)
 							if ((field[i][j] != c) && (field[i][j].color == c.color))
-								if (game.checkEatingTurns(new Pair(i, j)))
+								if (game.checkTurns(new Pair(i, j)) == 2)
 									return 0;
 					return 1;
 				}
 				return 1;
 			}
 			else {
-				let CET = game.checkEatingTurns(turn.selection);
+				let CET = game.checkTurns(turn.selection) == 2;
 				let CCT = game.checkCheckerTurn(turn.selection, sel);
 				if ((CCT == 0) || ((CCT == 1) && CET)) return 0;
 				res = CCT == 2 ? 3 : 1;
@@ -243,7 +203,7 @@ class Game {
 			else {
 				gameCopy.makeTurnStep(turn.selection, sel, 7);
 			}
-			return gameCopy.checkEatingTurns(sel);
+			return gameCopy.checkTurns(sel) == 2;
 		}
 
 		if ((res & 2) && checkForCont()) {
@@ -298,31 +258,24 @@ class Game {
 		}, turn.selection);
 	}
 
-	checkEatingTurns (selection) {
-		let {r, c} = selection;
-		for (let i = r - 1; i >= 0; i--) {
-			for (let j = c - 1; j >= 0; j--)
-				if (this.checkCheckerTurn(selection, new Pair(i, j)) === 2) return true;
-			for (let j = c + 1; j < 8; j++)
-				if (this.checkCheckerTurn(selection, new Pair(i, j)) === 2) return true;
-		}
-		for (let i = r + 1; i < 8; i++) {
-			for (let j = c - 1; j >= 0; j--)
-				if (this.checkCheckerTurn(selection, new Pair(i, j)) === 2) return true;
-			for (let j = c + 1; j < 8; j++)
-				if (this.checkCheckerTurn(selection, new Pair(i, j)) === 2) return true;
-		}
-		return false;
+	checkTurns (selection) {
+		let {r, c} = selection,
+			res = 0;
+		for (let d of Object.entries( this.field.getDiagonal(r, c, true) ))
+			if (d[0]) {
+				let check = this.checkCheckerTurn(selection, d[1]);
+				if ((check == 1) && (res != 2)) res = 1;
+				else if (check == 2) res = 2;
+			}
+		for (let d of Object.entries( this.field.getDiagonal(r, c, false) ))
+			if (d[0]) {
+				let check = this.checkCheckerTurn(selection, d[1]);
+				if ((check == 1) && (res != 2)) res = 1;
+				else if (check == 2) res = 2;
+			}
+		return res;
 	}
 }
-
-// view stores TurnBuilder and real game in state
-// view draws turnBuilder game
-// and hints apply to turnBuilder to get turn
-// OR maybe i can make this thing to be hints engine
-// cuz game may just execute whole turnCommand from other place
-// BUT engine must be separated from this thing
-// cuz engine can be turned off but turnBuilder must be there always!
 
 class TurnBuilder {
 	constructor (turn, gameShot) {
@@ -349,7 +302,7 @@ class TurnBuilder {
 		}
 
 		if (t.selection) {
-			this.history.push(this.game.field.toString());
+			this.history.push(this.game.makeShot());
 			if (t.cells.length >= 1)
 				this.game.makeTurnStep(t.cells.last, p, check);
 			else
@@ -366,9 +319,14 @@ class TurnBuilder {
 	}
 
 	popCell () {
-		this.game.field.fromString(this.history[this.history.length - 1]);
-		this.history.pop();
-		this.cells.pop();
+		if (this.turn.cells.length > 0) {
+			this.game.fromShot(this.history[this.history.length - 1]);
+			this.history.pop();
+			this.turn.cells.pop();
+		}
+		else {
+			this.turn.selection = undefined;
+		}
 	}
 
 	getTurn () {

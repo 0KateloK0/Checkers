@@ -2,7 +2,7 @@ import React from 'react';
 import './game.css';
 import {Game, TurnCommand, TurnBuilder} from './gameLogic.js';
 import {Checkers, CheckersUI, makeHintsEngine} from './checkers';
-/*import io from 'socket.io-client';
+import io from 'socket.io-client';
 
 let promisify = f => function (...args) {
 	return new Promise((resolve, reject) => {
@@ -13,7 +13,16 @@ let promisify = f => function (...args) {
 		f.call(this, ...args, callback);
 	})
 }
-*/
+
+let socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port);
+
+socket.on('connect', function () {
+	alert(...arguments);
+})
+socket.emit('join', {
+	room: 111,
+	username: 'Artem'
+});
 
 let Fio = props => <span className="FIO">{props.FIO}</span>
 

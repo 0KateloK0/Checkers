@@ -25,7 +25,15 @@
 }
 
 .checkers-cell-checked {
-	background: green;
+	background: #5792c5; /* green */
+}
+
+.checkers-cell-movable {
+	background: #86a7c3; /* #A0A0A0 */
+}
+
+.checkers-img-ghost {
+	opacity: 0.5;
 }
 
 .checkers-img {
