@@ -3,13 +3,14 @@ from app import app, db
 from app.models import User , Room, Player
 from flask_login import current_user, logout_user, login_user
 from app.forms import LoginForm, RegisterForm
+from flask_socketio import emit, leave_room
 import json
 import os
 
 @app.route('/')
 @app.route('/index')
 def index ():
-	return render_template('index.html', title='Main page')
+	return render_template('index.html', title='Main page', games=[])
 
 @app.route('/register', methods=['GET', 'POST'])
 def register ():
@@ -44,29 +45,12 @@ def logout ():
 
 @app.route('/game/<int:game_id>', methods=['GET', 'POST'])
 def game (game_id):
-	print(request.form)
-	path = ''.join(request.path.split('/')[3:])
-	print(path)
+	# path = ''.join(request.path.split('/')[3:])
 	if current_user.is_authenticated:
-		room = Room.query.filter_by(id=game_id)
-		if room.count() == 1:
-			room = room.first()
-		else:
-			room = Room(id=game_id)
-			db.session.add(room)
-		player = room.players.filter_by(user_id=current_user.id).first()
-		if player is None:
-			player = Player(user_id=current_user.id)
-			db.session.add(player)
-			room.add_player(player)
-		db.session.commit()
-		p = json.dumps([{
-			'state': pl.state,
-			'user': {
-				'id': pl.user.id,
-				'FIO': pl.user.FIO
-				} } for pl in room.players])
-		return render_template('game.html', title='Game {}'.format(game_id), p=p)
+		if Room.query.filter_by(id=game_id).first() is None:
+			db.session.add( Room(id=game_id) )
+			db.session.commit()
+		return render_template('game.html', title='Game {}'.format(game_id))
 	else:
 		return redirect(url_for('login'))
 
@@ -74,6 +58,20 @@ def game (game_id):
 def serve_requests (game_id, path):
 	print(game_id, path)
 	return make_response('', 500)
+
+@app.route('/players_list/<int:game_id>')
+def get_players_list (game_id):
+	room = Room.query.filter_by(id=game_id).first()
+	if room is None:
+		return make_response('room is not found', 404)
+	return json.dumps([ {
+		'user': {
+			'id': p.user.id,
+			'FIO': p.user.FIO
+		},
+		'state': p.state,
+		'id': p.id
+		} for p in room.players])
 
 @app.route('/<path:path>')
 @app.route('/game/<path:path>')

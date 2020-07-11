@@ -27,7 +27,6 @@ class Player (db.Model):
 	state = db.Column(db.Integer)
 	user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 	user = db.relationship('User', backref="player")
-	exclude_list = []
 
 class Room (db.Model):
 	id = db.Column(db.Integer, primary_key=True)
@@ -37,15 +36,6 @@ class Room (db.Model):
 	def __init__ (self, **kwargs):
 		super(Room, self).__init__(**kwargs)
 		self.player_counter = 0
-
-	def add_player (self, player):
-		self.player_counter = self.player_counter + 1
-		if self.player_counter == 1:
-			player.room_id = self.id
-			player.state = 0
-
-	def delete_player (self, player):
-		self.player_counter = self.player_counter - 1
 
 
 # class Game (db.Model):

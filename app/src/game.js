@@ -15,14 +15,17 @@ let promisify = f => function (...args) {
 }
 
 let socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port);
-
+// event 'connect' emits after this thing
 socket.on('connect', function () {
-	alert(...arguments);
+	// works after everything loads (seems like if it's not async)
+	console.log('user connected');
 })
-socket.emit('join', {
-	room: 111,
-	username: 'Artem'
+const ROOM = Number(location.pathname.match(/\/(\d*)$/)[1]);
+
+socket.emit('join_room', {
+	room: ROOM
 });
+
 
 let Fio = props => <span className="FIO">{props.FIO}</span>
 
@@ -204,6 +207,13 @@ class CheckersGame extends React.Component {
 		}
 		this.handleCheckersClick = this.handleCheckersClick.bind(this);
 		this.engine = makeHintsEngine(1 | 2 | 4);
+
+		let self = this;
+		socket.on('turn', function(data) {
+			console.log(data.turn);
+			let turn = new TurnCommand(self, self.state.game).fromShot(data.turn);
+			turn.execute();
+		});
 	}
 
 	/*restart () {
@@ -237,7 +247,10 @@ class CheckersGame extends React.Component {
 	executeCommand (command) {
 		if ( command.execute() ) {
 			this.game.history.push(command);
-			// send turn to server
+			socket.emit('turn', {
+				turn: command.makeShot(),
+				room: ROOM,
+			})
 		}
 	}
 
@@ -264,6 +277,9 @@ class CheckersGame extends React.Component {
 export default class App extends React.Component {
 	constructor (props) {
 		super(props);
+		this.state = {
+			players: []
+		}
 		// fiction
 		this.player1 = {
 			user: {
@@ -286,7 +302,31 @@ export default class App extends React.Component {
 			color: 'black'
 		}
 
-		this.players = [];
+		let self = this;
+
+		socket.on('player_joined', function (obj) {
+			self.setState(state => ({
+				players: state.players.concat(obj)
+			}))
+		});
+		socket.on('player_leaved', function ({id: kickID}) {
+			self.setState(state => ({
+				players: state.players.filter(pl => pl.id != kickID)
+			}))
+		});
+
+		// initial request for players list
+		let players = fetch('/players_list/'+ROOM)
+			.then(response => response.json())
+			.then(response => self.setState({players: response}))
+			.catch(err => {console.error(err)});
+
+		window.addEventListener('unload', function (e) {
+			// navigator.sendBeacon('/player_leaved/'+ROOM);
+			/*socket.emit('leave_room', {
+				room: ROOM
+			})*/
+		});
 	}
 
 	render () {
@@ -320,7 +360,7 @@ export default class App extends React.Component {
 						}]}/>
 					</div>
 					<div className="players-list-container">
-						<PlayersList players={this.players}/>
+						<PlayersList players={this.state.players}/>
 					</div>
 				</div>
 			</div>

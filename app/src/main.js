@@ -19,13 +19,19 @@ class CheckersRoom extends React.PureComponent {
 }
 
 export default class App extends React.Component {
+	constructor (props) {
+		if (!props.games) {
+			//fetch('')
+		}
+		this.state = {
+			games: props.games || []
+		}
+		// add events
+	}
 	render () {
-		let games = [
-			// new InitCommand().execute().field
-		]
 		return (
 			<div className="main">
-				{games.map((a, i) => <CheckersRoom
+				{this.state.games.map((a, i) => <CheckersRoom
 						key={i}
 						field={a}/>)}
 			</div>

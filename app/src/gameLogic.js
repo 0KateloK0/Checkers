@@ -350,6 +350,15 @@ class TurnCommand {
 		this.history = [];
 	}
 
+	makeShot () {
+		return this.history.join('-');
+	}
+
+	fromShot (shot) {
+		if (!shot.test(/([a-h][1-8]-?){2,}/)) throw new Error('incompatible string');
+		[this.selection, ...this.cells] = shot.split('-').map(a => new Pair(a));
+	}
+
 	execute () {
 		this.game.makeFullTurn(this);
 		this.state = 'finished';

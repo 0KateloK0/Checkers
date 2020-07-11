@@ -1,9 +1,9 @@
 from app import app, db, socketio
-from app.models import User # , Room, Game, Player
+from app.models import User , Room, Player # , Game
 
 @app.shell_context_processor
 def make_shell_context():
-    return {'db': db, 'User': User} #, 'Room': Room, 'Game': Game, 'Player': Player
+    return {'db': db, 'User': User, 'Room': Room, 'Player': Player, 'socketio': socketio} #, 'Game': Game, 
 
 if __name__ == '__main__':
 	socketio.run(app)
