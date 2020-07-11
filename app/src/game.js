@@ -1,7 +1,7 @@
 import React from 'react';
 import './game.css';
 import {Game, TurnCommand, TurnBuilder} from './gameLogic.js';
-import {Checkers, CheckersUI, makeHintsEngine} from './checkers';
+import {CheckersUI, makeHintsEngine} from './checkers';
 import io from 'socket.io-client';
 
 let promisify = f => function (...args) {
@@ -274,6 +274,39 @@ class CheckersGame extends React.Component {
 	}
 }
 
+class CheckersSettings extends React.PureComponent {
+	render () {
+		let {activePlayer} = this.props;
+		return (
+			<div className="checkers-settings">
+				<div className="bet-container">
+					<div className="bet">
+						<img src="chip.png" alt="" className="money-img"/> 10000
+					</div>
+				</div>
+				<div className="engine-settings-container">
+					<div className="engine-settings"></div>
+				</div>
+				<div className="time-settings-container">
+					<div className="time-settings"></div>
+				</div>
+				<div className="submit-btn-container">
+					<button className="submit-btn">Ready</button>
+				</div>
+			</div>
+			)
+	}
+}
+
+class Checkers extends React.PureComponent {
+	render () {
+		if (this.props.gameStarted)
+			return (<CheckersGame {...this.props.passThrough} />);
+		else
+			return (<CheckersSettings {...this.props.passThrough} />);
+	}
+}
+
 export default class App extends React.Component {
 	constructor (props) {
 		super(props);
@@ -340,7 +373,7 @@ export default class App extends React.Component {
 							history={[]} />
 					</div>
 					<div className="game-container">
-						<CheckersGame />
+						<Checkers gameStarted={false} passThrough={{}}/>
 					</div>
 					<div className="player-container player2">
 						<PlayerInfo
