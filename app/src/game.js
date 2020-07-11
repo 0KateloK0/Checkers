@@ -2,30 +2,7 @@ import React from 'react';
 import './game.css';
 import {Game, TurnCommand, TurnBuilder} from './gameLogic.js';
 import {CheckersUI, makeHintsEngine} from './checkers';
-import io from 'socket.io-client';
-
-let promisify = f => function (...args) {
-	return new Promise((resolve, reject) => {
-		function callback (err, results) {
-			if (err) reject(err);
-			else resolve(results);
-		}
-		f.call(this, ...args, callback);
-	})
-}
-
-let socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port);
-// event 'connect' emits after this thing
-socket.on('connect', function () {
-	// works after everything loads (seems like if it's not async)
-	console.log('user connected');
-})
-const ROOM = Number(location.pathname.match(/\/(\d*)$/)[1]);
-
-socket.emit('join_room', {
-	room: ROOM
-});
-
+import initServerLogic from './serverLogic.js';
 
 let Fio = props => <span className="FIO">{props.FIO}</span>
 
@@ -310,8 +287,12 @@ class Checkers extends React.PureComponent {
 export default class App extends React.Component {
 	constructor (props) {
 		super(props);
+
+		const SERVER = initServerLogic();
+
 		this.state = {
-			players: []
+			players: [],
+			newTurn: undefined
 		}
 		// fiction
 		this.player1 = {
@@ -335,31 +316,36 @@ export default class App extends React.Component {
 			color: 'black'
 		}
 
+
 		let self = this;
 
-		socket.on('player_joined', function (obj) {
+		SERVER.getPlayersList().then(response => {
+			self.setState({
+				players: response
+			})
+		})
+
+		SERVER.setCallbackOnEvent('player_joined', function (obj) {
 			self.setState(state => ({
 				players: state.players.concat(obj)
 			}))
 		});
-		socket.on('player_leaved', function ({id: kickID}) {
+		SERVER.setCallbackOnEvent('player_leaved', function ({id: kickID}) {
 			self.setState(state => ({
 				players: state.players.filter(pl => pl.id != kickID)
 			}))
 		});
 
-		// initial request for players list
-		let players = fetch('/players_list/'+ROOM)
-			.then(response => response.json())
-			.then(response => self.setState({players: response}))
-			.catch(err => {console.error(err)});
-
-		window.addEventListener('unload', function (e) {
+		/*window.addEventListener('unload', function (e) {
 			// navigator.sendBeacon('/player_leaved/'+ROOM);
-			/*socket.emit('leave_room', {
-				room: ROOM
-			})*/
+		});*/
+		SERVER.setCallbackOnEvent('turn', function (turn) {
+			self.setState({
+				newTurn: turn
+			});
 		});
+
+		this.SERVER = SERVER;
 	}
 
 	render () {
@@ -373,7 +359,12 @@ export default class App extends React.Component {
 							history={[]} />
 					</div>
 					<div className="game-container">
-						<Checkers gameStarted={false} passThrough={{}}/>
+						<Checkers
+							gameStarted={false}
+							passThrough={{
+								newTurn: this.state.newTurn,
+								sendTurn: this.SERVER.sendTurn
+							}}/>
 					</div>
 					<div className="player-container player2">
 						<PlayerInfo
