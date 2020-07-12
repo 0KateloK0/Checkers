@@ -27,7 +27,7 @@ def on_join (data):
 		},
 		'state': player.state,
 		'id': player.id
-		}, room=room, broadcast=True, skip_sid=request.sid)
+		}, room=room, broadcast=True)
 
 @socketio.on('disconnect')
 def on_disconnect ():
