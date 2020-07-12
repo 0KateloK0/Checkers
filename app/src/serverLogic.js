@@ -26,7 +26,7 @@ function initServerLogic () {
 		}
 
 		isAdmin () { return this.state & 4 }
-		isObserver () { return this.state & 2 }
+		isSpectator () { return this.state & 2 }
 		isPlayer () { return this.state & 1 }
 	}
 

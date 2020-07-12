@@ -70,3 +70,9 @@ body {
 .footer-span {
 	color: white;
 }
+
+.container {
+	background: #F0F0FA;
+	border: 1px solid silver;
+	border-radius: 10px;
+}
