@@ -188,11 +188,11 @@ class CheckersGame extends React.Component {
 		this.engine = makeHintsEngine(1 | 2 | 4);
 
 		let self = this;
-		socket.on('turn', function(data) {
+		/*socket.on('turn', function(data) {
 			console.log(data.turn);
 			let turn = new TurnCommand(self, self.state.game).fromShot(data.turn);
 			turn.execute();
-		});
+		});*/
 	}
 
 	/*restart () {
@@ -322,25 +322,17 @@ export default class App extends React.Component {
 		let self = this;
 
 		SERVER.getPlayersList().then(response => {
+			console.log(response);
 			self.setState({
 				players: response
 			})
 		})
 
-		SERVER.setCallbackOnEvent('player_joined', function (obj) {
-			self.setState(state => ({
-				players: state.players.concat(obj)
-			}))
+		SERVER.setCallbackOnEvent('players_changed', function (players) {
+			players = JSON.parse(players);
+			self.setState({players});
 		});
-		SERVER.setCallbackOnEvent('player_leaved', function ({id: kickID}) {
-			self.setState(state => ({
-				players: state.players.filter(pl => pl.id != kickID)
-			}))
-		});
-
-		/*window.addEventListener('unload', function (e) {
-			// navigator.sendBeacon('/player_leaved/'+ROOM);
-		});*/
+		
 		SERVER.setCallbackOnEvent('turn', function (turn) {
 			self.setState({
 				newTurn: turn

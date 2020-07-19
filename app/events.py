@@ -4,43 +4,45 @@ from app.models import Player, Room
 from flask_socketio import join_room, leave_room, emit, rooms
 from flask_login import current_user
 
+def make_players_change_event (room_id):
+	emit('players_changed', 
+			Room.query.filter_by(id=room_id).first().get_players(), 
+			room=room_id, 
+			broadcast=True, 
+			skip_sid=request.sid)
+
+def check_connection (sid, room):
+	for r in rooms(sid)[1:]:
+		if r == room:
+			return True
+	return False
+
 @socketio.on('join_room')
 def on_join (data):
 	room = data['room']
-	def check_connection (sid, room):
-		for r in rooms(sid)[1:]:
-			if r == room:
-				return True
-		return False
 	if (check_connection(request.sid, room)):
 		return
 	join_room(room)
-	player = Player.query.filter_by(room_id=room).first()
+	player = Player.query.filter_by(user_id=current_user.id).first()
 	if player is None:
 		player = Player(room_id=room, user_id=current_user.id)
 		db.session.add(player)
 		db.session.commit()
-	emit('player_joined', {
-		'user': {
-			'FIO': current_user.FIO,
-			'id': current_user.id
-		},
-		'state': player.state,
-		'id': player.id
-		}, room=room, broadcast=True)
+	print(Room.query.filter_by(id=room).first().get_players())
+	make_players_change_event(room)
 
 @socketio.on('disconnect')
 def on_disconnect ():
-	# assumes there is just one room that player in
+	print('player disconnected')
 	for room in rooms(request.sid)[1:]:
 		leave_room(room)
-		player = Player.query.filter_by(room_id=room).first()
-		id = player.id
+		player = Player.query.filter_by(user_id=current_user.id).first()
+		if player is None:
+			print('wtf lol')
 		db.session.delete(player)
-		emit('player_leaved', {
-			'id': id
-		}, room=room, broadcast=True, skip_sid=sid)
-	db.session.commit()
+		db.session.commit()
+		make_players_change_event(room)
+		print(Room.query.filter_by(id=room).first().get_players())
 
 @socketio.on('leave_room')
 def on_leave (data):
@@ -50,11 +52,9 @@ def on_leave (data):
 	player = Player.query.filter_by(room_id=room).first()
 	if player is None:
 		raise Exception('wtf lol')
-	emit('player_leaved', {
-		'id': player.id
-		}, room=room, broadcast=True, skip_sid=request.sid)
 	db.session.delete(player)
 	db.session.commit()
+	make_players_change_event(room)
 
 @socketio.on('turn')
 def on_turn (data):

@@ -1,6 +1,7 @@
 from app import db, login
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
+import json
 
 class User (UserMixin, db.Model):
 	id = db.Column(db.Integer, primary_key=True)
@@ -37,6 +38,15 @@ class Room (db.Model):
 		super(Room, self).__init__(**kwargs)
 		self.player_counter = 0
 
+	def get_players (self):
+		return json.dumps([{
+			'id': p.id,
+			'state': p.state,
+			'user': {
+				'id': p.user.id,
+				'FIO': p.user.FIO
+			}
+			} for p in self.players])
 
 # class Game (db.Model):
 # 	# __tablename__ = 'games'
