@@ -25,30 +25,36 @@ def on_join (data):
 	join_room(room)
 	player = Player.query.filter_by(user_id=current_user.id).first()
 	if player is None:
-		players_count = len(Room.query.filter_by(id=room).first().players)
-		state = 0
-		if players_count == 0:
-			state = state & 1
-		if players_count < 2:
-			state = state & 2
-		if players_count >= 2:
-			state = state & 4
-		player = Player(room_id=room, user_id=current_user.id, state=state)
+		player = Player(room_id=room, user_id=current_user.id)
 		db.session.add(player)
 		db.session.commit()
+	print(Room.query.filter_by(id=room).first().get_players())
 	make_players_change_event(room)
 
 @socketio.on('disconnect')
 def on_disconnect ():
+	print('player disconnected')
 	for room in rooms(request.sid)[1:]:
 		leave_room(room)
 		player = Player.query.filter_by(user_id=current_user.id).first()
 		if player is None:
-			pass
-		else:
-			db.session.delete(player)
-			db.session.commit()
-			make_players_change_event(room)
+			print('wtf lol')
+		db.session.delete(player)
+		db.session.commit()
+		make_players_change_event(room)
+		print(Room.query.filter_by(id=room).first().get_players())
+
+@socketio.on('leave_room')
+def on_leave (data):
+	room = data['room']
+	leave_room(room)
+	print('user leaved room')
+	player = Player.query.filter_by(room_id=room).first()
+	if player is None:
+		raise Exception('wtf lol')
+	db.session.delete(player)
+	db.session.commit()
+	make_players_change_event(room)
 
 @socketio.on('turn')
 def on_turn (data):
