@@ -28,15 +28,13 @@ class Player (db.Model):
 	state = db.Column(db.Integer)
 	user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 	user = db.relationship('User', backref="player")
+	game_id = db.Column(db.Integer, db.ForeignKey('game.id'))
 
 class Room (db.Model):
 	id = db.Column(db.Integer, primary_key=True)
 	players = db.relationship('Player', backref="room", lazy="dynamic")
-	player_counter = db.Column(db.Integer, default=0)
-
-	def __init__ (self, **kwargs):
-		super(Room, self).__init__(**kwargs)
-		self.player_counter = 0
+	game = db.relationship('Game', backref="room")
+	game_id = db.Column(db.Integer, db.ForeignKey('game.id'))
 
 	def get_players (self):
 		return json.dumps([{
@@ -48,7 +46,14 @@ class Room (db.Model):
 			}
 			} for p in self.players])
 
-# class Game (db.Model):
-# 	# __tablename__ = 'games'
-# 	id = db.Column(db.Integer, primary_key=True)
-# 	field = db.Column(db.String(64))
+class Game (db.Model):
+	id = db.Column(db.Integer, primary_key=True)
+	field = db.Column(db.String(64))
+	settings = db.Column(db.String(64))
+	players = db.relationship('Player', backref="game")
+	turns = db.relationship('Turn', backref='game')
+
+class Turn (db.Model):
+	id = db.Column(db.Integer, primary_key=True)
+	info = db.Column(db.String(64))
+	game_id = db.Column(db.Integer, db.ForeignKey('game.id'))
