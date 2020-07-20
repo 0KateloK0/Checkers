@@ -28,7 +28,7 @@ class Player (db.Model):
 	state = db.Column(db.Integer)
 	user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 	user = db.relationship('User', backref="player")
-	game_id = db.Column(db.Integer)
+	game_id = db.Column(db.Integer, db.ForeignKey('game.id'))
 
 class Room (db.Model):
 	id = db.Column(db.Integer, primary_key=True)

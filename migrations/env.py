@@ -86,7 +86,7 @@ def run_migrations_online():
             render_as_batch=config.get_main_option('sqlalchemy.url').startswith('sqlite:'),
             **current_app.extensions['migrate'].configure_args
         )
-
+        # 
         with context.begin_transaction():
             context.run_migrations()
 
