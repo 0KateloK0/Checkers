@@ -356,7 +356,11 @@ class TurnCommand {
 
 	fromShot (shot) {
 		if (!shot.test(/([a-h][1-8]-?){2,}/)) throw new Error('incompatible string');
-		[this.selection, ...this.cells] = shot.split('-').map(a => new Pair(a));
+		let tb = new TurnBuilder(this, this.game);
+		shot.split('-').map(a => new Pair(a)).forEach(a => {
+			let r = tb.addCell(a);
+			if (!r) throw new Error('Incorrect turn sequence');
+		});
 	}
 
 	execute () {

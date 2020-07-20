@@ -204,7 +204,8 @@ class CheckersGame extends React.Component {
 	}*/
 
 	handleCheckersClick (e) {
-		let [row, col] = [...e.target.closest('.checkers-cell').getAttribute('pos').split('_').map(Number)];
+		let [row, col] = [...e.target.closest('.checkers-cell')
+						.getAttribute('pos').split('_').map(Number)];
 
 		let r = this.state.tb.addCell(row, col);
 		if (r) {

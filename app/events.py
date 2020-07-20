@@ -25,7 +25,7 @@ def on_join (data):
 	join_room(room)
 	player = Player.query.filter_by(user_id=current_user.id).first()
 	if player is None:
-		players_count = len(Room.query.filter_by(id=room).first().players)
+		players_count = Player.query.filter_by(room_id=room).count()
 		state = 0
 		if players_count == 0:
 			state = state & 1
