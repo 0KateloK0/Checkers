@@ -3,7 +3,7 @@
 /.pnp
 .pnp.js
 /virt
-/__pycache__
+__pycache__
 /app/__pycache__
 
 # testing

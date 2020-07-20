@@ -8,6 +8,9 @@ class User (UserMixin, db.Model):
 	FIO = db.Column(db.String(120), index=True, unique=True)
 	email = db.Column(db.String(120), index=True, unique=True)
 	password_hash = db.Column(db.String(120))
+	money = db.Column(db.Integer)
+	rating = db.Column(db.Integer)
+	avatar_src = db.Column(db.String(120))
 
 	def __repr__ (self):
 		return '<User {}>'.format(self.FIO)
@@ -30,19 +33,25 @@ class Player (db.Model):
 	user = db.relationship('User', backref="player")
 	game_id = db.Column(db.Integer, db.ForeignKey('game.id'))
 
+	def get_info (self):
+		return json.dumps({
+			'id': self.id,
+			'state': self.state,
+			'user': {
+				'id': self.user.id,
+				'FIO': self.user.FIO,
+				'money': self.user.money,
+				'rating': self.user.rating,
+				'avatar_src': self.user.avatar_src
+			}
+			})
+
 class Room (db.Model):
 	id = db.Column(db.Integer, primary_key=True)
 	players = db.relationship('Player', backref="room", lazy="dynamic")
 
 	def get_players (self):
-		return json.dumps([{
-			'id': p.id,
-			'state': p.state,
-			'user': {
-				'id': p.user.id,
-				'FIO': p.user.FIO
-			}
-			} for p in self.players])
+		return json.dumps([p.get_info() for p in self.players])
 
 class Game (db.Model):
 	id = db.Column(db.Integer, primary_key=True)

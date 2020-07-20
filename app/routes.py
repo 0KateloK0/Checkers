@@ -63,6 +63,13 @@ def get_players_list (game_id):
 		return make_response('room is not found', 404)
 	return room.get_players()
 
+@app.route('/player_info/<int:player_id>')
+def get_player_info (player_id):
+	player = Player.query.filter_by(id=player_id).first()
+	if player is None:
+		return make_response('player not found', 404)
+	return player.get_info()
+
 @app.route('/<path:path>')
 @app.route('/game/<path:path>')
 def serve_static_file (path):
