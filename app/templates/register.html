@@ -1,35 +1,30 @@
 {% extends 'base.html' %}
 
 {% block react %}
-	<form action="" method="POST">
-		{{ form.hidden_tag() }}
-		<label>
-			{{ form.first_name.label }}
-			{{ form.first_name(size=100) }}
-		</label>
-		<br>
-		<label>
-			{{ form.second_name.label }}
-			{{ form.second_name(size=100) }}
-		</label>
-		<br>
-		<label>
-			{{ form.email.label }}
-			{{ form.email(size=100) }}
-		</label>
-		<br>
-		<label>
-			{{ form.password.label }}
-			{{ form.password(size=100) }}
-		</label>
-		<br>
-		<label>
-			{{ form.password2.label }}
-			{{ form.password2(size=100) }}
-		</label>
-		<br>
-		<label>
-			{{ form.submit() }}
-		</label>
-	</form>
+	<div id="register" class="__react-root">
+		<form method="POST" class="register-form">
+			{{ form.hidden_tag() }}
+			<label class="register-form__label form__label">
+				{{ form.first_name(placeholder="First name") }}
+			</label>
+			<label class="register-form__label form__label">
+				{{ form.second_name(placeholder="Second name") }}
+			</label>
+			<label class="register-form__label form__label">
+				{{ form.email(placeholder="Email") }}
+			</label>
+			<label class="register-form__label form__label">
+				{{ form.password(placeholder="Password") }}
+			</label>
+			<label class="register-form__label form__label">
+				{{ form.password2(placeholder="Password repeat") }}
+			</label>
+			<label class="register-form__label form__label">
+				{{ form.submit() }}
+			</label>
+		</form>
+		<p>
+			<span>You have profile?</span> <a href="/login">Sign In!</a>
+		</p>
+	</div>
 {% endblock %}

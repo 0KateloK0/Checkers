@@ -1,4 +1,4 @@
-#login {
+#register {
 	display: -webkit-flex;
 	display: -moz-flex;
 	display: -ms-flex;
@@ -9,3 +9,4 @@
 	align-items: center;
 	flex-direction: column;
 }
+

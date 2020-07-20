@@ -76,3 +76,8 @@ body {
 	border: 1px solid silver;
 	border-radius: 10px;
 }
+
+.form__label {
+	margin: 5px;
+	display: block;
+}

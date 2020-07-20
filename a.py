@@ -28,11 +28,13 @@ class Player (db.Model):
 	state = db.Column(db.Integer)
 	user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 	user = db.relationship('User', backref="player")
-	game_id = db.Column(db.Integer)
+	game_id = db.Column(db.Integer, db.ForeignKey('game.id'))
 
 class Room (db.Model):
 	id = db.Column(db.Integer, primary_key=True)
 	players = db.relationship('Player', backref="room", lazy="dynamic")
+	game = db.relationship('Game', backref="room")
+	game_id = db.Column(db.Integer, db.ForeignKey('game.id'))
 
 	def get_players (self):
 		return json.dumps([{
@@ -47,10 +49,9 @@ class Room (db.Model):
 class Game (db.Model):
 	id = db.Column(db.Integer, primary_key=True)
 	field = db.Column(db.String(64))
-	setup = db.Column(db.String(64))
+	settings = db.Column(db.String(64))
+	players = db.relationship('Player', backref="game")
 	turns = db.relationship('Turn', backref='game')
-	started = db.Column(db.Boolean)
-	players = db.relationship('Player', backref='game')
 
 class Turn (db.Model):
 	id = db.Column(db.Integer, primary_key=True)

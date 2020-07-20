@@ -6,7 +6,8 @@ import './index.css';
 const apps = {
 	game: () => import('./game.js'),
 	main: () => import('./main.js'),
-	login: () => import('./login.js')
+	login: () => import('./login.js'),
+	register: () => import('./register.js')
 }
 
 function renderAppInEl (el) {
