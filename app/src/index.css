@@ -65,6 +65,9 @@ body {
 	-ms-align-items: center;
 	align-items: center;
 	justify-content: space-around;
+	position: absolute;
+    bottom: 0;
+    width: 100%;
 }
 
 .footer-span {

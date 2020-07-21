@@ -6,15 +6,6 @@ import initServerLogic from './serverLogic.js';
 
 let Fio = props => <span className="FIO">{props.FIO}</span>
 
-function Timer (props) {
-	let t = Math.floor(props.time / 1000);
-	// displays mm:ss if more than 15 seconds left
-	// otherwise displays mm:ss.mls
-	return (
-		<span className="timer">{Math.floor(t / 60)}:{t % 60}{t < 15 ? '.' + (props.time % 1000) : ''}</span>
-		)
-}
-
 function Profile (props) {
 	let {avatarSrc, FIO, money, rating} = props.user;
 	return (
@@ -89,87 +80,12 @@ class PlayerInfo extends React.Component {
 	}
 }
 
-class Player extends React.PureComponent {
-	render () {
-		let {player: {
-			state,
-			user: {FIO}
-		}, ...rest} = this.props;
-		return (
-			<li {...rest}>
-				<Fio FIO={FIO} />
-			</li>
-			)
-	}
-}
-
-class PlayersList extends React.PureComponent {
-	render () {
-		return (
-			<div className="players">
-				<ul className="players-list">
-				{this.props.players.map(
-					(a, i) => <Player key={i} className="players-list__info" player={a}></Player>
-					)}
-				</ul>
-			</div>
-			)
-	}
-}
-
-class Message extends React.PureComponent {
-	render () {
-		return (
-			<div className="message">
-				<div className="message-author-av-container">
-					<img src={this.props.author.src} alt="" className="message-author-av"/>
-				</div>
-				<div className="message-body-container">
-					<div className="author-name-container">
-						<Fio FIO={this.props.author.name} />
-					</div>
-					<p className="message-body">
-						{this.props.body}
-					</p>
-				</div>
-			</div>
-			)
-	}
-}
-
-class Chat extends React.PureComponent {
-	render () {
-		return (
-			<div className="chat">
-				<div className="messages-container">
-					<div className="messages">
-						{
-							this.props.messages.map(a => 
-								<div className="message-container" key={a.id}>
-									<Message body={a.body} author={a.author}/>
-								</div>
-							)
-						}
-					</div>
-				</div>
-				<div className="messages-form-container">
-					<div className="messages-form">
-						<input type="text"/>
-						<input type="submit"/>
-					</div>
-				</div>
-			</div>
-			)
-	}
-}
-
 function GameStats ({
 	time1, time2, order
 }={}) {
 	return (
 		<div className="game-stats">
-			<Timer time={time2} />
-			<Timer time={time1} />
+			
 		</div>
 		)
 }
@@ -186,22 +102,7 @@ class CheckersGame extends React.Component {
 		}
 		this.handleCheckersClick = this.handleCheckersClick.bind(this);
 		this.engine = makeHintsEngine(1 | 2 | 4);
-
-		let self = this;
-		/*socket.on('turn', function(data) {
-			console.log(data.turn);
-			let turn = new TurnCommand(self, self.state.game).fromShot(data.turn);
-			turn.execute();
-		});*/
 	}
-
-	/*restart () {
-		let game = new Game();
-		this.setState({
-			game,
-			turn: new TurnCommand(this, game)
-		});
-	}*/
 
 	handleCheckersClick (e) {
 		let [row, col] = [...e.target.closest('.checkers-cell')
@@ -278,15 +179,6 @@ class CheckersSettings extends React.PureComponent {
 	}
 }
 
-class Checkers extends React.PureComponent {
-	render () {
-		if (this.props.gameStarted)
-			return (<CheckersGame {...this.props.passThrough} />);
-		else
-			return (<CheckersSettings {...this.props.passThrough} />);
-	}
-}
-
 export default class App extends React.Component {
 	constructor (props) {
 		super(props);
@@ -295,7 +187,8 @@ export default class App extends React.Component {
 
 		this.state = {
 			players: [],
-			newTurn: undefined
+			newTurn: undefined,
+			gameStarted: true,
 		}
 		// fiction
 		this.player1 = {
@@ -318,7 +211,6 @@ export default class App extends React.Component {
 			timeLeft: 224000,
 			color: 'black'
 		}
-
 
 		let self = this;
 
@@ -344,45 +236,32 @@ export default class App extends React.Component {
 	}
 
 	render () {
-		return (
-			<div className="app-container">
-				<div className="app">
-					<div className="player-container player1">
-						<PlayerInfo
-							player={this.player2}
-							field={[[]]}
-							history={[]} />
-					</div>
-					<div className="game-container">
-						<Checkers
-							gameStarted={false}
-							passThrough={{
-								newTurn: this.state.newTurn,
-								sendTurn: this.SERVER.sendTurn
-							}}/>
-					</div>
-					<div className="player-container player2">
-						<PlayerInfo
-							player={this.player1}
-							field={[[]]}
-							reverse={true}
-							history={[]} />
-					</div>
-					<div className="chat-container">
-						<Chat messages={[{
-							author: {
-								name: 'Artem Katelkin',
-								src: 'Artem.jpg'
-							},
-							body: 'Privet!',
-							id: 1
-						}]}/>
-					</div>
-					<div className="players-list-container">
-						<PlayersList players={this.state.players}/>
+		if (this.state.game.started) {
+			return (
+				<div className="app-container">
+					<div className="app">
+						<div className="player-container player1">
+							<PlayerInfo
+								player={this.player2}
+								field={[[]]}
+								history={[]} />
+						</div>
+						<div className="game-container">
+							<CheckersGame />
+						</div>
+						<div className="player-container player2">
+							<PlayerInfo
+								player={this.player1}
+								field={[[]]}
+								reverse={true}
+								history={[]} />
+						</div>
 					</div>
 				</div>
-			</div>
-			)
+				)
+		}
+		else {
+			return;
+		}
 	}
 }

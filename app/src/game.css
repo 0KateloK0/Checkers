@@ -3,19 +3,16 @@
 	justify-content: space-around;
 	-ms-align-items: center;
 	align-items: center;
-	padding: 30px 50px;
-}
-
-.app {
 	min-width: 500px;
 	width: 80%;
 	max-width: 800px;
-	margin: auto;
+	margin: 70px auto;
+}
+
+.app {
 	display: grid;
 	grid-template-columns: 1fr 3fr 1fr;
-	grid-template-rows: 1fr 0.5fr;
-	grid-template-areas: "player1 game player2"
-						 "chat chat list";
+	grid-template-areas: "player1 game player2";
 	grid-gap: 30px 30px;
 }
 
