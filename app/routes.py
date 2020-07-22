@@ -70,6 +70,10 @@ def get_player_info (player_id):
 		return make_response('player not found', 404)
 	return player.get_info()
 
+@app.route('/get_current_player_id')
+def get_player_id ():
+	return str(current_user.player[0].id)
+
 @app.route('/<path:path>')
 @app.route('/game/<path:path>')
 def serve_static_file (path):

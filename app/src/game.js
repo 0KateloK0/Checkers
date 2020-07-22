@@ -4,8 +4,6 @@ import {Game, TurnCommand, TurnBuilder} from './gameLogic.js';
 import {CheckersUI, makeHintsEngine} from './checkers';
 import initServerLogic from './serverLogic.js';
 
-let Fio = props => <span className="FIO">{props.FIO}</span>
-
 function Profile (props) {
 	let {avatarSrc, FIO, money, rating} = props.user;
 	return (
@@ -14,7 +12,7 @@ function Profile (props) {
 				<img className="avatar-img" src={avatarSrc} alt="bl"/>
 			</div>
 			<div className="FIO-container">
-				<Fio FIO={FIO} />
+				<span className="FIO">{FIO}</span>
 			</div>
 			<div className="rating-container">
 				<img src="rating.png" alt="" className="rating-img"/>
@@ -140,8 +138,6 @@ class CheckersGame extends React.Component {
 			<div className="game">
 				<div className="game-stats-container">
 					<GameStats
-						time1={13}
-						time2={14} 
 						order={this.state.game.order} />
 				</div>
 				<div className="checkers-UI-container">
@@ -179,19 +175,96 @@ class CheckersSettings extends React.PureComponent {
 	}
 }
 
+function UnsetUser ({color, handleClick}={}) {
+	return (
+		<div className="unset-user">
+			<h2>{color[0].toUpperCase() + color.slice(1).toLowerCase()} player hasn't joined yet!</h2>
+			<p>Press button if you want to join!</p>
+			<button onClick={handleClick} data-color={color}>Join as {color}</button>
+		</div>
+	)
+}
+
 export default class App extends React.Component {
 	constructor (props) {
 		super(props);
 
-		const SERVER = initServerLogic();
-
 		this.state = {
-			players: [],
-			newTurn: undefined,
-			gameStarted: true,
+			game: new Game(),
+			isGameStarted: false,
+			player1: undefined,
+			player2: undefined
 		}
-		// fiction
-		this.player1 = {
+
+		this.handleUnsetPlayerBtnClick = this.handleUnsetPlayerBtnClick.bind(this);
+
+		this.SERVER = initServerLogic();
+	}
+
+	handleUnsetPlayerBtnClick (e) {
+		let color = e.target.dataset.color;
+		let self = this;
+		this.SERVER.getPlayerInfo().then(result => {
+			if (color == 'white') self.setState({player1: result})
+			else self.setState({player2: result});
+		});
+	}
+
+	render () {
+		if (this.state.isGameStarted) {
+			return (
+				<div className="app-container">
+					<div className="app">
+						<div className="player-container player1">
+							<PlayerInfo
+								player={this.state.player2}
+								field={this.state.game.field}
+								history={this.state.game.history || []} />
+						</div>
+						<div className="game-container">
+							<CheckersGame />
+						</div>
+						<div className="player-container player2">
+							<PlayerInfo
+								player={this.state.player1}
+								field={this.state.game.field}
+								history={this.state.game.history || []} 
+								reverse={true} />
+						</div>
+					</div>
+				</div>
+				)
+		}
+		else {
+			return (
+				<div className="app-container">
+					<div className="app">
+						<div className="player-container player1">
+							{this.state.player1 ? 
+								<Profile user={this.state.player1.user} /> : 
+								<UnsetUser
+									color="white"
+									handleClick={this.handleUnsetPlayerBtnClick} />}
+						</div>
+						<div className="game-container">
+							<CheckersSettings activePlayer={'white'}/>
+						</div>
+						<div className="player-container player2">
+							{this.state.player2 ? 
+								<Profile user={this.state.player2.user} /> : 
+								<UnsetUser
+									color="black"
+									handleClick={this.handleUnsetPlayerBtnClick} />}
+						</div>
+					</div>
+				</div>
+				)
+		}
+	}
+}
+
+// fiction
+		/*this.player1 = {
 			user: {
 				avatarSrc: 'Artem.jpg',
 				FIO: 'Artem Katelkin',
@@ -210,18 +283,18 @@ export default class App extends React.Component {
 			},
 			timeLeft: 224000,
 			color: 'black'
-		}
+		}*/
 
-		let self = this;
+		// let self = this;
 
-		SERVER.getPlayersList().then(response => {
+		/*SERVER.getPlayersList().then(response => {
 			console.log(response);
 			self.setState({
 				players: response
 			})
-		})
+		})*/
 
-		SERVER.setCallbackOnEvent('players_changed', function (players) {
+		/*SERVER.setCallbackOnEvent('players_changed', function (players) {
 			players = JSON.parse(players);
 			self.setState({players});
 		});
@@ -230,38 +303,4 @@ export default class App extends React.Component {
 			self.setState({
 				newTurn: turn
 			});
-		});
-
-		this.SERVER = SERVER;
-	}
-
-	render () {
-		if (this.state.game.started) {
-			return (
-				<div className="app-container">
-					<div className="app">
-						<div className="player-container player1">
-							<PlayerInfo
-								player={this.player2}
-								field={[[]]}
-								history={[]} />
-						</div>
-						<div className="game-container">
-							<CheckersGame />
-						</div>
-						<div className="player-container player2">
-							<PlayerInfo
-								player={this.player1}
-								field={[[]]}
-								reverse={true}
-								history={[]} />
-						</div>
-					</div>
-				</div>
-				)
-		}
-		else {
-			return;
-		}
-	}
-}
+		});*/
