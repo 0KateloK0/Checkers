@@ -5,7 +5,7 @@ import {CheckersUI, makeHintsEngine} from './checkers';
 import initServerLogic from './serverLogic.js';
 
 function Profile (props) {
-	let {avatarSrc, FIO, money, rating} = props.user;
+	let {avatar_src: avatarSrc, FIO, money, rating} = props.user;
 	return (
 		<div className={'profile ' + (props.className || '') + (props.reverse ? 'reverse' : '')}>
 			<div className="avatar-container">
@@ -199,15 +199,23 @@ export default class App extends React.Component {
 		this.handleUnsetPlayerBtnClick = this.handleUnsetPlayerBtnClick.bind(this);
 
 		this.SERVER = initServerLogic();
+
+		let self = this;
+		this.SERVER.setCallbackOnEvent('player_joined', function ({color, playerData}={}) {
+			if (color == 'white') self.setState({player1: Object.assign(playerData, {color})})
+			else self.setState({player2: Object.assign(playerData, {color})});
+		})
 	}
 
 	handleUnsetPlayerBtnClick (e) {
 		let color = e.target.dataset.color;
 		let self = this;
 		this.SERVER.getPlayerInfo().then(result => {
-			if (color == 'white') self.setState({player1: result})
-			else self.setState({player2: result});
-		});
+			if (color == 'white') self.setState({player1: Object.assign(result, {color})})
+			else self.setState({player2: Object.assign(result, {color})});
+		}).then(function () {
+			self.SERVER.emitPlayerJoinedEvent(color == 'white' ? self.state.player1 : self.state.player2);
+		})
 	}
 
 	render () {
@@ -247,7 +255,7 @@ export default class App extends React.Component {
 									handleClick={this.handleUnsetPlayerBtnClick} />}
 						</div>
 						<div className="game-container">
-							<CheckersSettings activePlayer={'white'}/>
+							<CheckersSettings />
 						</div>
 						<div className="player-container player2">
 							{this.state.player2 ? 

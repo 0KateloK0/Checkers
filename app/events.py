@@ -40,6 +40,7 @@ def on_join (data):
 
 @socketio.on('disconnect')
 def on_disconnect ():
+	print('player disconnected')
 	for room in rooms(request.sid)[1:]:
 		leave_room(room)
 		player = Player.query.filter_by(user_id=current_user.id).first()
@@ -52,4 +53,16 @@ def on_disconnect ():
 
 @socketio.on('turn')
 def on_turn (data):
-	emit('turn', {'turn': data['turn']}, broadcast=True, room=data['room'], skip_sid=request.sid)
+	emit('turn',
+		{'turn': data['turn']},
+		broadcast=True,
+		room=data['room'],
+		skip_sid=request.sid)
+
+@socketio.on('player_joined')
+def on_player_joined (data):
+	emit('player_joined',
+		{'playerData': data['playerData']},
+		broadcast=True,
+		room=data['room'],
+		skip_sid=request.sid)

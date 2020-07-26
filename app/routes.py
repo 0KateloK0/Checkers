@@ -9,7 +9,7 @@ import os
 @app.route('/')
 @app.route('/index')
 def index ():
-	return render_template('index.html', title='Main page', games=[])
+	return render_template('index.html', title='Main page')
 
 @app.route('/register', methods=['GET', 'POST'])
 def register ():
@@ -17,7 +17,11 @@ def register ():
 		return redirect(url_for('index'))
 	form = RegisterForm()
 	if form.validate_on_submit():
-		user = User(FIO=form.get_FIO(), email=form.email.data)
+		user = User(FIO=form.get_FIO(),
+				email=form.email.data,
+				avatar_src="unauthorized.jpg",
+				money=10000,
+				rating=2000)
 		user.set_password(form.password.data)
 		db.session.add(user)
 		db.session.commit()

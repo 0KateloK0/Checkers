@@ -3,18 +3,22 @@ import io from 'socket.io-client';
 function initServerLogic () {
 	let socket = io.connect('ws://' + document.domain + ':' + location.port);
 	const ROOM = Number(location.pathname.match(/\/(\d*)$/)[1]);
-	let CURRENT_PLAYER_ID;
-	fetch('/get_current_player_id').then(response => response.text())
-	.then(response => {
-		console.log(response);
-		CURRENT_PLAYER_ID = Number(response);
-	})
-
 	socket.on('connect', function () {
 		socket.emit('join_room', {
 			room: ROOM
 		});
 	})
+	let CURRENT_PLAYER_ID;
+	(function getCurrentPlayerID () {
+		fetch('/get_current_player_id').then(response => response.text())
+		.then(response => {
+			console.log(response);
+			CURRENT_PLAYER_ID = Number(response);
+		}).catch(err => {
+			getCurrentPlayerID();
+		})
+	})();
+
 
 	class Player {
 		constructor (obj) {
@@ -58,6 +62,12 @@ function initServerLogic () {
 				turn,
 				room: ROOM,
 			})
+		},
+		emitPlayerJoinedEvent (data) {
+			socket.emit('player_joined', {
+				playerData: data,
+				room: ROOM
+			});
 		}
 	}
 

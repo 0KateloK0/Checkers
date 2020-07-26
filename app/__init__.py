@@ -14,6 +14,6 @@ migrate = Migrate(app, db)
 login = LoginManager(app)
 login.login_view = 'login'
 
-socketio = SocketIO(app)
+socketio = SocketIO(app, ping_timeout=10000)
 
 from app import models, forms, routes, events

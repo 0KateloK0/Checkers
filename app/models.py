@@ -8,9 +8,9 @@ class User (UserMixin, db.Model):
 	FIO = db.Column(db.String(120), index=True, unique=True)
 	email = db.Column(db.String(120), index=True, unique=True)
 	password_hash = db.Column(db.String(120))
-	money = db.Column(db.Integer)
-	rating = db.Column(db.Integer)
-	avatar_src = db.Column(db.String(120))
+	money = db.Column(db.Integer, default=0)
+	rating = db.Column(db.Integer, default=0)
+	avatar_src = db.Column(db.String(120), default="unauthorized.jpg")
 
 	def __repr__ (self):
 		return '<User {}>'.format(self.FIO)
@@ -34,6 +34,8 @@ class Player (db.Model):
 	game_id = db.Column(db.Integer, db.ForeignKey('game.id'))
 
 	def get_info (self):
+		if self.user.avatar_src is None:
+			self.user.avatar_src = "unauthorized.jpg"
 		return json.dumps({
 			'id': self.id,
 			'state': self.state,
